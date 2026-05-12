@@ -132,28 +132,31 @@
         document.getElementById('app-screen').style.display = 'block';
         carregarDados();
     }
-
     // 3. Carregar dados da Nuvem (Supabase)
-    async function carregarDados() {
-        const grid = document.getElementById('grid');
-        grid.innerHTML = '<p style="color: gray;">Sincronizando com a nuvem...</p>';
+  async function carregarDados() {
+    const grid = document.getElementById('grid');
+    grid.innerHTML = '<p style="color: gray;">Sincronizando com a nuvem...</p>';
 
-        try {
-            const { data, error } = await supabaseClient
-                .from('registros')
-                .select('*')
-                .order('created_at', { ascending: false });
+    try {
+        // Forçamos uma busca limpa
+        const { data, error } = await supabaseClient
+            .from('registros')
+            .select('*')
+            .order('id', { ascending: false });
 
-            if (error) throw error;
-
-            db = data || [];
-            render();
-        } catch (err) {
-            console.error("Erro Supabase:", err.message);
-            grid.innerHTML = '<p style="color: red;">Erro ao conectar com o banco de dados.</p>';
+        if (error) {
+            console.error("Erro detalhado do Supabase:", error);
+            throw error;
         }
-    }
 
+        db = data || [];
+        console.log("Dados recebidos:", db); // Isso ajuda a ver no F12 se os dados chegaram
+        render();
+    } catch (err) {
+        console.error("Erro na conexão:", err);
+        grid.innerHTML = `<p style="color: red;">Erro ao conectar: ${err.message}</p>`;
+    }
+}
     // 4. Adicionar novo registro na Nuvem
     async function addKB() {
         const btn = document.getElementById('btn-save');
