@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NOC Knowledge Base - Cloud</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        :root {
+            --carrefour-blue: #005bbb;
+            --carrefour-dark-blue: #00387b;
+            --bg-light: #f4f7f9;
+            --card-light: #ffffff;
+            --text-light: #333;
+            --border-light: #dee2e6;
+        }
+
+        body.dark-mode {
+            --bg-light: #121212;
+            --card-light: #1e1e1e;
+            --text-light: #e0e0e0;
+            --border-light: #333;
+        }
+
+        body { font-family: 'Segoe UI', sans-serif; background-color: var(--bg-light); margin: 0; color: var(--text-light); transition: 0.3s; }
+        header { background: var(--carrefour-dark-blue); color: white; padding: 12px 40px; display: flex; justify-content: space-between; align-items: center; }
+        
+        #login-screen { display: flex; justify-content: center; align-items: center; height: 100vh; background: var(--carrefour-dark-blue); position: fixed; width: 100%; z-index: 9999; }
+        .login-box { background: white; padding: 40px; border-radius: 12px; width: 320px; text-align: center; color: #333; }
+        
+        #app-screen { display: none; }
+        .container { max-width: 1400px; margin: 20px auto; padding: 0 20px; display: grid; grid-template-columns: 320px 1fr; gap: 25px; }
+
+        .sidebar { background: var(--card-light); padding: 20px; border-radius: 8px; border: 1px solid var(--border-light); height: fit-content; }
+        input, select, textarea { width: 100%; padding: 10px; margin-bottom: 12px; border: 1px solid var(--border-light); border-radius: 6px; background: var(--card-light); color: var(--text-light); box-sizing: border-box; }
+        .btn-save { background: var(--carrefour-blue); color: white; border: none; padding: 15px; border-radius: 6px; cursor: pointer; font-weight: bold; width: 100%; }
+        
+        .filter-bar { display: flex; gap: 10px; margin-bottom: 20px; border-bottom: 2px solid var(--border-light); padding-bottom: 10px; }
+        .filter-btn { padding: 8px 18px; border-radius: 20px; border: 1px solid var(--carrefour-blue); background: transparent; color: var(--carrefour-blue); cursor: pointer; font-weight: bold; }
+        .filter-btn.active { background: var(--carrefour-blue); color: white; }
+        
+        #search { padding: 15px; font-size: 16px; border: 2px solid var(--carrefour-blue); border-radius: 10px; width: 100%; margin-bottom: 20px; background: var(--card-light); color: var(--text-light); }
+        .kb-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px; }
+        .kb-card { background: var(--card-light); padding: 20px; border-radius: 10px; border: 1px solid var(--border-light); cursor: pointer; position: relative; }
+        
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 10000; justify-content: center; align-items: center; }
+        .modal-content { background: var(--card-light); width: 90%; max-width: 850px; padding: 30px; border-radius: 12px; position: relative; color: var(--text-light); }
+    </style>
+</head>
+<body>
+
+    <div id="login-screen">
+        <div class="login-box">
+            <h2>NOC Access</h2>
+            <input type="text" id="u" placeholder="Usuário">
+            <input type="password" id="p" placeholder="Senha">
+            <button onclick="checkLogin()" class="btn-save">ACESSAR NUVEM</button>
+        </div>
+    </div>
+
+    <div id="app-screen">
+        <header>
+            <h2 style="margin:0">KNOWLEDGE BASE CLOUD</h2>
+            <div style="display:flex; gap:20px; align-items:center;">
+                <div onclick="toggleDarkMode()" style="cursor:pointer">🌙 Modo Noturno</div>
+                <button onclick="logout()" style="background:transparent; border:1px solid white; color:white; padding:5px 15px; border-radius:4px;">Sair</button>
+            </div>
+        </header>
+
+        <div class="container">
+            <aside class="sidebar">
+                <h3>Novo Registro</h3>
+                <label>Menu:</label>
+                <select id="vert">
+                    <option value="Operação DVA">Operação DVA</option>
+                    <option value="Parceiros">Parceiros</option>
+                    <option value="Lojas">Lojas</option>
+                    <option value="Contatos Úteis">Contatos Úteis</option>
+                </select>
+                <input type="text" id="tit" placeholder="Título">
+                <select id="typ">
+                    <option value="Texto">Texto</option>
+                    <option value="PDF">PDF</option>
+                </select>
+                <textarea id="cont" rows="6" placeholder="Conteúdo..."></textarea>
+                <button onclick="addKB()" class="btn-save" id="btn-save">SALVAR NA NUVEM</button>
+            </aside>
+
+            <main>
+                <input type="text" id="search" placeholder="🔍 Pesquisar na nuvem..." oninput="render()">
+                <div class="filter-bar">
+                    <button class="filter-btn active" onclick="filterBy('Todos', this)">Todos</button>
+                    <button class="filter-btn" onclick="filterBy('Operação DVA', this)">DVA</button>
+                    <button class="filter-btn" onclick="filterBy('Parceiros', this)">Parceiros</button>
+                    <button class="filter-btn" onclick="filterBy('Lojas', this)">Lojas</button>
+                    <button class="filter-btn" onclick="filterBy('Contatos Úteis', this)">📞 Contatos</button>
+                </div>
+                <div class="kb-grid" id="grid">Carregando dados da nuvem...</div>
+            </main>
+        </div>
+    </div>
+
+    <div id="modal" class="modal"><div class="modal-content"><span onclick="closeM()" style="cursor:pointer; float:right; font-size:30px;">&times;</span><h2 id="m-title"></h2><div id="modal-body"></div></div></div>
+
+    <script>
+        // --- CONFIGURAÇÃO SUPABASE ---
+        const SUPABASE_URL = https://mttpkrnkhqzvnphqsrbn.supabase.co;
+        const SUPABASE_KEY = sb_publishable_Gh1PMGl9PFzA4jAOAekXgQ_vIEVNcbV;
+        const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+        let db = [];
+        let currentFilter = 'Todos';
+
+        async function carregarDados() {
+            const { data, error } = await supabaseClient.from('registros').select('*').order('created_at', { ascending: false });
+            if (data) { db = data; render(); }
+        }
+
+        async function addKB() {
+            const btn = document.getElementById('btn-save');
+            btn.innerText = 'SALVANDO...';
+            btn.disabled = true;
+
+            const novo = {
+                menu: document.getElementById('vert').value,
+                title: document.getElementById('tit').value,
+                type: document.getElementById('typ').value,
+                content: document.getElementById('cont').value
+            };
+
+            const { error } = await supabaseClient.from('registros').insert([novo]);
+            
+            if (error) {
+                alert('Erro ao salvar: ' + error.message);
+            } else {
+                document.getElementById('tit').value = '';
+                document.getElementById('cont').value = '';
+                await carregarDados();
+            }
+            btn.innerText = 'SALVAR NA NUVEM';
+            btn.disabled = false;
+        }
+
+        async function del(id) {
+            if(confirm('Excluir registro da nuvem?')) {
+                await supabaseClient.from('registros').delete().eq('id', id);
+                await carregarDados();
+            }
+        }
+
+        // --- FUNÇÕES DE UI (IGUAIS ÀS ANTERIORES) ---
+        function checkLogin() {
+            if(document.getElementById('u').value === 'NOC' && document.getElementById('p').value === 'evolve') {
+                sessionStorage.setItem('auth', 'true');
+                mostrarApp();
+            }
+        }
+
+        function mostrarApp() {
+            document.getElementById('login-screen').style.display='none';
+            document.getElementById('app-screen').style.display='block';
+            carregarDados();
+        }
+
+        if(sessionStorage.getItem('auth')) mostrarApp();
+
+        function filterBy(v, btn) {
+            currentFilter = v;
+            document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            render();
+        }
+
+        function render() {
+            const term = document.getElementById('search').value.toLowerCase();
+            const grid = document.getElementById('grid');
+            grid.innerHTML = '';
+
+            db.filter(i => {
+                const matchesSearch = i.title.toLowerCase().includes(term) || i.content.toLowerCase().includes(term);
+                const matchesFilter = currentFilter === 'Todos' || i.menu === currentFilter;
+                return matchesSearch && matchesFilter;
+            }).forEach(i => {
+                grid.innerHTML += `
+                    <div class="kb-card" onclick="openM(${i.id})">
+                        <span style="font-size:9px; background:#eee; padding:2px 5px; color:#666;">${i.menu}</span>
+                        <h3>${i.title}</h3>
+                        <div style="text-align:right; color:red; font-size:10px;" onclick="event.stopPropagation(); del(${i.id})">Remover da Nuvem</div>
+                    </div>`;
+            });
+        }
+
+        function openM(id) {
+            const item = db.find(i => i.id === id);
+            document.getElementById('m-title').innerText = item.title;
+            document.getElementById('modal-body').innerHTML = `<p style="white-space: pre-wrap;">${item.content}</p>`;
+            document.getElementById('modal').style.display = 'flex';
+        }
+
+        function closeM() { document.getElementById('modal').style.display='none'; }
+        function logout() { sessionStorage.clear(); location.reload(); }
+        function toggleDarkMode() { document.body.classList.toggle('dark-mode'); }
+    </script>
+</body>
+</html>
