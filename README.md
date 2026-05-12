@@ -1,2 +1,2 @@
 # conhecimento-noc
-ase de Conhecimento Cloud - Operação NOC
+base de Conhecimento Cloud - Operação NOC
