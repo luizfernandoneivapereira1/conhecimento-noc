@@ -103,103 +103,154 @@
     <div id="modal" class="modal"><div class="modal-content"><span onclick="closeM()" style="cursor:pointer; float:right; font-size:30px;">&times;</span><h2 id="m-title"></h2><div id="modal-body"></div></div></div>
 
     <script>
-        // --- CONFIGURAÇÃO SUPABASE ---
-        const SUPABASE_URL =https://mttpkrnkhqzvnphqsrbn.supabase.co;
-        const SUPABASE_KEY =sb_secret_4pyIAH157U8BYzLtUwbJCw_T1zXwMYz;
-        const supabaseClient =supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+    // --- CONFIGURAÇÃO SUPABASE CONECTADA ---
+    const SUPABASE_URL = 'https://mttpkrnkhqzvnphqsrbn.supabase.co';
+    const SUPABASE_KEY = 'sb_secret_4pyIAH157U8BYzLtUwbJCw_T1zXwMYz';
 
-        let db = [];
-        let currentFilter = 'Todos';
+    // Inicialização do Cliente
+    const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-        async function carregarDados() {
-            const { data, error } = await supabaseClient.from('registros').select('*').order('created_at', { ascending: false });
-            if (data) { db = data; render(); }
+    let db = [];
+    let currentFilter = 'Todos';
+
+    // 1. Função de Login (Corrigida)
+    async function checkLogin() {
+        const u = document.getElementById('u').value;
+        const p = document.getElementById('p').value;
+
+        if (u === 'NOC' && p === 'evolve') {
+            sessionStorage.setItem('auth', 'true');
+            mostrarPainel();
+        } else {
+            alert('Usuário ou senha incorretos');
         }
+    }
 
-        async function addKB() {
-            const btn = document.getElementById('btn-save');
-            btn.innerText = 'SALVANDO...';
-            btn.disabled = true;
+    // 2. Função para alternar telas
+    function mostrarPainel() {
+        document.getElementById('login-screen').style.display = 'none';
+        document.getElementById('app-screen').style.display = 'block';
+        carregarDados();
+    }
 
-            const novo = {
-                menu: document.getElementById('vert').value,
-                title: document.getElementById('tit').value,
-                type: document.getElementById('typ').value,
-                content: document.getElementById('cont').value
-            };
+    // 3. Carregar dados da Nuvem (Supabase)
+    async function carregarDados() {
+        const grid = document.getElementById('grid');
+        grid.innerHTML = '<p style="color: gray;">Sincronizando com a nuvem...</p>';
 
-            const { error } = await supabaseClient.from('registros').insert([novo]);
-            
-            if (error) {
-                alert('Erro ao salvar: ' + error.message);
-            } else {
-                document.getElementById('tit').value = '';
-                document.getElementById('cont').value = '';
-                await carregarDados();
-            }
-            btn.innerText = 'SALVAR NA NUVEM';
-            btn.disabled = false;
-        }
+        try {
+            const { data, error } = await supabaseClient
+                .from('registros')
+                .select('*')
+                .order('created_at', { ascending: false });
 
-        async function del(id) {
-            if(confirm('Excluir registro da nuvem?')) {
-                await supabaseClient.from('registros').delete().eq('id', id);
-                await carregarDados();
-            }
-        }
+            if (error) throw error;
 
-        // --- FUNÇÕES DE UI (IGUAIS ÀS ANTERIORES) ---
-        function checkLogin() {
-            if(document.getElementById('u').value === 'NOC' && document.getElementById('p').value === 'evolve') {
-                sessionStorage.setItem('auth', 'true');
-                mostrarApp();
-            }
-        }
-
-        function mostrarApp() {
-            document.getElementById('login-screen').style.display='none';
-            document.getElementById('app-screen').style.display='block';
-            carregarDados();
-        }
-
-        if(sessionStorage.getItem('auth')) mostrarApp();
-
-        function filterBy(v, btn) {
-            currentFilter = v;
-            document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
-            btn.classList.add('active');
+            db = data || [];
             render();
+        } catch (err) {
+            console.error("Erro Supabase:", err.message);
+            grid.innerHTML = '<p style="color: red;">Erro ao conectar com o banco de dados.</p>';
+        }
+    }
+
+    // 4. Adicionar novo registro na Nuvem
+    async function addKB() {
+        const btn = document.getElementById('btn-save');
+        const tit = document.getElementById('tit').value;
+        const cont = document.getElementById('cont').value;
+        const menu = document.getElementById('vert').value;
+        const type = document.getElementById('typ').value;
+
+        if (!tit || !cont) return alert('Preencha os campos obrigatórios!');
+
+        btn.innerText = 'SALVANDO...';
+        btn.disabled = true;
+
+        const { error } = await supabaseClient
+            .from('registros')
+            .insert([{ menu, title: tit, type, content: cont }]);
+
+        if (error) {
+            alert('Erro ao salvar: ' + error.message);
+        } else {
+            document.getElementById('tit').value = '';
+            document.getElementById('cont').value = '';
+            await carregarDados();
         }
 
-        function render() {
-            const term = document.getElementById('search').value.toLowerCase();
-            const grid = document.getElementById('grid');
-            grid.innerHTML = '';
+        btn.innerText = 'SALVAR NA NUVEM';
+        btn.disabled = false;
+    }
 
-            db.filter(i => {
-                const matchesSearch = i.title.toLowerCase().includes(term) || i.content.toLowerCase().includes(term);
-                const matchesFilter = currentFilter === 'Todos' || i.menu === currentFilter;
-                return matchesSearch && matchesFilter;
-            }).forEach(i => {
-                grid.innerHTML += `
-                    <div class="kb-card" onclick="openM(${i.id})">
-                        <span style="font-size:9px; background:#eee; padding:2px 5px; color:#666;">${i.menu}</span>
-                        <h3>${i.title}</h3>
-                        <div style="text-align:right; color:red; font-size:10px;" onclick="event.stopPropagation(); del(${i.id})">Remover da Nuvem</div>
-                    </div>`;
-            });
+    // 5. Deletar da Nuvem
+    async function del(id) {
+        if (confirm('Deseja excluir este procedimento permanentemente da nuvem?')) {
+            const { error } = await supabaseClient
+                .from('registros')
+                .delete()
+                .eq('id', id);
+
+            if (error) alert('Erro ao excluir');
+            else carregarDados();
+        }
+    }
+
+    // 6. Renderizar na tela
+    function render() {
+        const term = document.getElementById('search').value.toLowerCase();
+        const grid = document.getElementById('grid');
+        grid.innerHTML = '';
+
+        const filtrados = db.filter(i => {
+            const matchesSearch = i.title.toLowerCase().includes(term) || i.content.toLowerCase().includes(term);
+            const matchesFilter = currentFilter === 'Todos' || i.menu === currentFilter;
+            return matchesSearch && matchesFilter;
+        });
+
+        if (filtrados.length === 0) {
+            grid.innerHTML = '<p style="grid-column: 1/-1; text-align: center; opacity: 0.5;">Nenhum registro encontrado.</p>';
+            return;
         }
 
-        function openM(id) {
-            const item = db.find(i => i.id === id);
-            document.getElementById('m-title').innerText = item.title;
-            document.getElementById('modal-body').innerHTML = `<p style="white-space: pre-wrap;">${item.content}</p>`;
-            document.getElementById('modal').style.display = 'flex';
-        }
+        filtrados.forEach(i => {
+            grid.innerHTML += `
+                <div class="kb-card" onclick="openM(${i.id})">
+                    <div style="display:flex; justify-content:space-between; align-items:start;">
+                        <span class="menu-tag">${i.menu}</span>
+                        <span style="font-size:9px; opacity:0.5;">${i.type}</span>
+                    </div>
+                    <h3>${i.title}</h3>
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-top:10px;">
+                        <span style="font-size:10px; opacity:0.4;">${new Date(i.created_at).toLocaleDateString()}</span>
+                        <button class="del-btn" onclick="event.stopPropagation(); del(${i.id})">Remover</button>
+                    </div>
+                </div>`;
+        });
+    }
 
-        function closeM() { document.getElementById('modal').style.display='none'; }
-        function logout() { sessionStorage.clear(); location.reload(); }
-        function toggleDarkMode() { document.body.classList.toggle('dark-mode'); }
-    </script>
+    // Funções de Interface
+    function openM(id) {
+        const item = db.find(i => i.id === id);
+        document.getElementById('m-title').innerText = item.title;
+        document.getElementById('modal-body').innerHTML = `<p style="white-space: pre-wrap; font-size:15px; line-height:1.6;">${item.content}</p>`;
+        document.getElementById('modal').style.display = 'flex';
+    }
+
+    function closeM() { document.getElementById('modal').style.display = 'none'; }
+    function filterBy(v, btn) {
+        currentFilter = v;
+        document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        render();
+    }
+    function logout() { sessionStorage.clear(); location.reload(); }
+    function toggleDarkMode() { document.body.classList.toggle('dark-mode'); }
+
+    // Verificar se já está logado ao abrir a página
+    if (sessionStorage.getItem('auth') === 'true') {
+        mostrarPainel();
+    }
+</script>
 </body>
 </html>
