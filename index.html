@@ -3,12 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>NOC Knowledge Base - Cloud</title>
+    <title>NOC Knowledge Base - Pro Cloud</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         :root {
             --carrefour-blue: #005bbb;
             --carrefour-dark-blue: #00387b;
+            --carrefour-red: #ed1c24;
             --bg-light: #f4f7f9;
             --card-light: #ffffff;
             --text-light: #333;
@@ -22,72 +23,120 @@
             --border-light: #333;
         }
 
-        body { font-family: 'Segoe UI', sans-serif; background-color: var(--bg-light); margin: 0; color: var(--text-light); transition: 0.3s; }
-        header { background: var(--carrefour-dark-blue); color: white; padding: 12px 40px; display: flex; justify-content: space-between; align-items: center; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: var(--bg-light); margin: 0; color: var(--text-light); transition: 0.3s; }
         
+        /* HEADER */
+        header { background: var(--carrefour-dark-blue); color: white; padding: 12px 40px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 10px rgba(0,0,0,0.2); }
+        
+        /* LOGIN */
         #login-screen { display: flex; justify-content: center; align-items: center; height: 100vh; background: var(--carrefour-dark-blue); position: fixed; width: 100%; z-index: 9999; }
-        .login-box { background: white; padding: 40px; border-radius: 12px; width: 320px; text-align: center; color: #333; }
+        .login-box { background: white; padding: 40px; border-radius: 12px; width: 320px; text-align: center; color: #333; box-shadow: 0 10px 25px rgba(0,0,0,0.5); }
         
         #app-screen { display: none; }
-        .container { max-width: 1400px; margin: 20px auto; padding: 0 20px; display: grid; grid-template-columns: 320px 1fr; gap: 25px; }
+        .container { max-width: 1400px; margin: 20px auto; padding: 0 20px; display: grid; grid-template-columns: 350px 1fr; gap: 25px; }
 
-        .sidebar { background: var(--card-light); padding: 20px; border-radius: 8px; border: 1px solid var(--border-light); height: fit-content; }
-        input, select, textarea { width: 100%; padding: 10px; margin-bottom: 12px; border: 1px solid var(--border-light); border-radius: 6px; background: var(--card-light); color: var(--text-light); box-sizing: border-box; }
-        .btn-save { background: var(--carrefour-blue); color: white; border: none; padding: 15px; border-radius: 6px; cursor: pointer; font-weight: bold; width: 100%; }
+        /* SIDEBAR / FORM */
+        .sidebar { background: var(--card-light); padding: 25px; border-radius: 12px; border: 1px solid var(--border-light); height: fit-content; position: sticky; top: 20px; }
+        .sidebar h3 { margin-top: 0; color: var(--carrefour-blue); border-bottom: 2px solid #eee; padding-bottom: 10px; }
+        label { font-size: 12px; font-weight: bold; display: block; margin-bottom: 5px; color: var(--carrefour-blue); }
+        input, select, textarea { width: 100%; padding: 12px; margin-bottom: 15px; border: 1px solid var(--border-light); border-radius: 8px; background: var(--card-light); color: var(--text-light); font-size: 14px; }
         
-        .filter-bar { display: flex; gap: 10px; margin-bottom: 20px; border-bottom: 2px solid var(--border-light); padding-bottom: 10px; }
-        .filter-btn { padding: 8px 18px; border-radius: 20px; border: 1px solid var(--carrefour-blue); background: transparent; color: var(--carrefour-blue); cursor: pointer; font-weight: bold; }
+        .btn-save { background: var(--carrefour-blue); color: white; border: none; padding: 15px; border-radius: 8px; cursor: pointer; font-weight: bold; width: 100%; transition: 0.2s; }
+        .btn-save:hover { background: var(--carrefour-dark-blue); }
+        .btn-edit-mode { background: #ff9800 !important; }
+        .btn-cancel { background: #666; color: white; border: none; padding: 8px; border-radius: 8px; cursor: pointer; width: 100%; margin-top: 5px; display: none; }
+
+        /* MAIN CONTENT */
+        .filter-bar { display: flex; gap: 10px; margin-bottom: 20px; border-bottom: 2px solid var(--border-light); padding-bottom: 15px; overflow-x: auto; }
+        .filter-btn { padding: 10px 20px; border-radius: 25px; border: 1px solid var(--carrefour-blue); background: transparent; color: var(--carrefour-blue); cursor: pointer; font-weight: bold; white-space: nowrap; transition: 0.2s; }
         .filter-btn.active { background: var(--carrefour-blue); color: white; }
         
-        #search { padding: 15px; font-size: 16px; border: 2px solid var(--carrefour-blue); border-radius: 10px; width: 100%; margin-bottom: 20px; background: var(--card-light); color: var(--text-light); }
-        .kb-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px; }
-        .kb-card { background: var(--card-light); padding: 20px; border-radius: 10px; border: 1px solid var(--border-light); cursor: pointer; position: relative; }
+        #search { padding: 18px; font-size: 16px; border: 2px solid var(--carrefour-blue); border-radius: 12px; width: 100%; margin-bottom: 25px; background: var(--card-light); color: var(--text-light); box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
+
+        /* GRID & CARDS */
+        .kb-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px; }
+        .kb-card { background: var(--card-light); padding: 20px; border-radius: 12px; border: 1px solid var(--border-light); cursor: pointer; position: relative; transition: 0.3s; display: flex; flex-direction: column; justify-content: space-between; }
+        .kb-card:hover { transform: translateY(-5px); box-shadow: 0 10px 20px rgba(0,0,0,0.1); border-color: var(--carrefour-blue); }
+        .kb-card h3 { margin: 12px 0; font-size: 18px; color: var(--carrefour-blue); }
         
-        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 10000; justify-content: center; align-items: center; }
-        .modal-content { background: var(--card-light); width: 90%; max-width: 850px; padding: 30px; border-radius: 12px; position: relative; color: var(--text-light); }
+        .menu-tag { font-size: 10px; background: #e9ecef; padding: 4px 8px; border-radius: 5px; color: #495057; font-weight: bold; text-transform: uppercase; }
+        body.dark-mode .menu-tag { background: #333; color: #ccc; }
+
+        .card-actions { display: flex; justify-content: space-between; align-items: center; margin-top: 15px; border-top: 1px solid #eee; padding-top: 10px; }
+        .btn-icon { background: none; border: none; cursor: pointer; font-size: 16px; opacity: 0.6; transition: 0.2s; }
+        .btn-icon:hover { opacity: 1; transform: scale(1.2); }
+        .fav-active { color: #ffc107; opacity: 1; }
+
+        /* MODAL */
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 10000; justify-content: center; align-items: center; backdrop-filter: blur(5px); }
+        .modal-content { background: var(--card-light); width: 90%; max-width: 900px; max-height: 85vh; padding: 40px; border-radius: 15px; position: relative; overflow-y: auto; box-shadow: 0 20px 50px rgba(0,0,0,0.3); }
+        .close-modal { position: absolute; top: 20px; right: 25px; font-size: 35px; cursor: pointer; color: #999; }
+        
+        .content-view { white-space: pre-wrap; font-size: 16px; line-height: 1.8; color: var(--text-light); }
+        .content-view a { color: var(--carrefour-blue); font-weight: bold; }
+
+        /* UTILS */
+        .stats { font-size: 12px; margin-bottom: 10px; opacity: 0.7; }
     </style>
 </head>
 <body>
 
     <div id="login-screen">
         <div class="login-box">
-            <h2>NOC Access</h2>
+            <img src="https://www.carrefour.com.br/favicon.ico" width="40" style="margin-bottom:10px">
+            <h2>NOC Knowledge Base</h2>
+            <p style="font-size:12px; color:#666">Cloud Management v2.0</p>
             <input type="text" id="u" placeholder="Usuário">
             <input type="password" id="p" placeholder="Senha">
-            <button onclick="checkLogin()" class="btn-save">ACESSAR NUVEM</button>
+            <button onclick="checkLogin()" class="btn-save">ENTRAR NO SISTEMA</button>
         </div>
     </div>
 
     <div id="app-screen">
         <header>
-            <h2 style="margin:0">KNOWLEDGE BASE CLOUD</h2>
-            <div style="display:flex; gap:20px; align-items:center;">
-                <div onclick="toggleDarkMode()" style="cursor:pointer">🌙 Modo Noturno</div>
-                <button onclick="logout()" style="background:transparent; border:1px solid white; color:white; padding:5px 15px; border-radius:4px;">Sair</button>
+            <div style="display:flex; align-items:center; gap:15px">
+                <h2 style="margin:0; letter-spacing: 1px;">KNOWLEDGE BASE <span style="font-weight:100">| NOC</span></h2>
+            </div>
+            <div style="display:flex; gap:25px; align-items:center;">
+                <div class="stats" id="total-count">Carregando...</div>
+                <div onclick="toggleDarkMode()" style="cursor:pointer; font-size: 14px;">🌙 Modo Noturno</div>
+                <button onclick="logout()" style="background:transparent; border:1px solid white; color:white; padding:6px 15px; border-radius:6px; cursor:pointer;">Sair</button>
             </div>
         </header>
 
         <div class="container">
             <aside class="sidebar">
-                <h3>Novo Registro</h3>
-                <label>Menu:</label>
+                <h3 id="form-title">Novo Registro</h3>
+                <input type="hidden" id="edit-id">
+                
+                <label>Menu de Destino:</label>
                 <select id="vert">
                     <option value="Operação DVA">Operação DVA</option>
                     <option value="Parceiros">Parceiros</option>
                     <option value="Lojas">Lojas</option>
                     <option value="Contatos Úteis">Contatos Úteis</option>
                 </select>
-                <input type="text" id="tit" placeholder="Título">
+
+                <label>Título do Procedimento:</label>
+                <input type="text" id="tit" placeholder="Ex: Reinicialização de Servidor X">
+
+                <label>Tipo de Conteúdo:</label>
                 <select id="typ">
-                    <option value="Texto">Texto</option>
-                    <option value="PDF">PDF</option>
+                    <option value="Texto">Texto / Passo a Passo</option>
+                    <option value="Link">Link Externo</option>
+                    <option value="PDF">Caminho PDF (Rede)</option>
                 </select>
-                <textarea id="cont" rows="6" placeholder="Conteúdo..."></textarea>
-                <button onclick="addKB()" class="btn-save" id="btn-save">SALVAR NA NUVEM</button>
+
+                <label>Conteúdo Detalhado:</label>
+                <textarea id="cont" rows="10" placeholder="Descreva o procedimento aqui..."></textarea>
+
+                <button onclick="saveData()" class="btn-save" id="btn-save">SALVAR NA NUVEM</button>
+                <button onclick="cancelEdit()" class="btn-cancel" id="btn-cancel">Cancelar Edição</button>
             </aside>
 
             <main>
-                <input type="text" id="search" placeholder="🔍 Pesquisar na nuvem..." oninput="render()">
+                <input type="text" id="search" placeholder="🔍 Pesquisar por título, conteúdo ou tags..." oninput="render()">
+                
                 <div class="filter-bar">
                     <button class="filter-btn active" onclick="filterBy('Todos', this)">Todos</button>
                     <button class="filter-btn" onclick="filterBy('Operação DVA', this)">DVA</button>
@@ -95,165 +144,203 @@
                     <button class="filter-btn" onclick="filterBy('Lojas', this)">Lojas</button>
                     <button class="filter-btn" onclick="filterBy('Contatos Úteis', this)">📞 Contatos</button>
                 </div>
-                <div class="kb-grid" id="grid">Carregando dados da nuvem...</div>
+
+                <div class="kb-grid" id="grid">Buscando informações...</div>
             </main>
         </div>
     </div>
 
-    <div id="modal" class="modal"><div class="modal-content"><span onclick="closeM()" style="cursor:pointer; float:right; font-size:30px;">&times;</span><h2 id="m-title"></h2><div id="modal-body"></div></div></div>
+    <div id="modal" class="modal">
+        <div class="modal-content">
+            <span class="close-modal" onclick="closeM()">&times;</span>
+            <div id="m-header">
+                <span id="m-tag" class="menu-tag"></span>
+                <h2 id="m-title" style="color:var(--carrefour-blue); margin: 15px 0;"></h2>
+            </div>
+            <hr style="opacity:0.1; margin: 20px 0;">
+            <div id="modal-body" class="content-view"></div>
+        </div>
+    </div>
 
     <script>
-    // --- CONFIGURAÇÃO SUPABASE CONECTADA ---
-    const SUPABASE_URL = 'https://mttpkrnkhqzvnphqsrbn.supabase.co';
-    const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im10dHBrcm5raHF6dm5waHFzcmJuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg1ODcxOTYsImV4cCI6MjA5NDE2MzE5Nn0.7g_10vmDK2cHsPJyN64CNiIxVZxJIBKIXBTKmGYY-Ig';
+        // --- CONFIGURAÇÃO SUPABASE ---
+        const SUPABASE_URL = 'https://mttpkrnkhqzvnphqsrbn.supabase.co';
+        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im10dHBrcm5raHF6dm5waHFzcmJuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg1ODcxOTYsImV4cCI6MjA5NDE2MzE5Nn0.7g_10vmDK2cHsPJyN64CNiIxVZxJIBKIXBTKmGYY-Ig';
+        const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-    // Inicialização do Cliente
-    const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+        let db = [];
+        let currentFilter = 'Todos';
+        let favorites = JSON.parse(localStorage.getItem('noc_favs') || '[]');
 
-    let db = [];
-    let currentFilter = 'Todos';
-
-    // 1. Função de Login (Corrigida)
-    async function checkLogin() {
-        const u = document.getElementById('u').value;
-        const p = document.getElementById('p').value;
-
-        if (u === 'NOC' && p === 'evolve') {
-            sessionStorage.setItem('auth', 'true');
-            mostrarPainel();
-        } else {
-            alert('Usuário ou senha incorretos');
-        }
-    }
-
-    // 2. Função para alternar telas
-    function mostrarPainel() {
-        document.getElementById('login-screen').style.display = 'none';
-        document.getElementById('app-screen').style.display = 'block';
-        carregarDados();
-    }
-    // 3. Carregar dados da Nuvem (Supabase)
-  async function carregarDados() {
-    const grid = document.getElementById('grid');
-    grid.innerHTML = '<p style="color: gray;">Sincronizando com a nuvem...</p>';
-
-    try {
-        // Forçamos uma busca limpa
-        const { data, error } = await supabaseClient
-            .from('registros')
-            .select('*')
-            .order('id', { ascending: false });
-
-        if (error) {
-            console.error("Erro detalhado do Supabase:", error);
-            throw error;
+        // --- AUTENTICAÇÃO ---
+        function checkLogin() {
+            const u = document.getElementById('u').value;
+            const p = document.getElementById('p').value;
+            if (u === 'NOC' && p === 'evolve') {
+                sessionStorage.setItem('auth', 'true');
+                location.reload();
+            } else { alert('Acesso negado.'); }
         }
 
-        db = data || [];
-        console.log("Dados recebidos:", db); // Isso ajuda a ver no F12 se os dados chegaram
-        render();
-    } catch (err) {
-        console.error("Erro na conexão:", err);
-        grid.innerHTML = `<p style="color: red;">Erro ao conectar: ${err.message}</p>`;
-    }
-}
-    // 4. Adicionar novo registro na Nuvem
-    async function addKB() {
-        const btn = document.getElementById('btn-save');
-        const tit = document.getElementById('tit').value;
-        const cont = document.getElementById('cont').value;
-        const menu = document.getElementById('vert').value;
-        const type = document.getElementById('typ').value;
+        if (sessionStorage.getItem('auth')) {
+            document.getElementById('login-screen').style.display = 'none';
+            document.getElementById('app-screen').style.display = 'block';
+            carregarDados();
+        }
 
-        if (!tit || !cont) return alert('Preencha os campos obrigatórios!');
+        // --- LÓGICA DE DADOS ---
+        async function carregarDados() {
+            try {
+                const { data, error } = await supabaseClient.from('registros').select('*').order('created_at', { ascending: false });
+                if (error) throw error;
+                db = data || [];
+                render();
+            } catch (err) {
+                document.getElementById('grid').innerHTML = `<p style="color:red">Erro de sincronização: ${err.message}</p>`;
+            }
+        }
 
-        btn.innerText = 'SALVANDO...';
-        btn.disabled = true;
+        async function saveData() {
+            const id = document.getElementById('edit-id').value;
+            const btn = document.getElementById('btn-save');
+            const payload = {
+                menu: document.getElementById('vert').value,
+                title: document.getElementById('tit').value,
+                type: document.getElementById('typ').value,
+                content: document.getElementById('cont').value
+            };
 
-        const { error } = await supabaseClient
-            .from('registros')
-            .insert([{ menu, title: tit, type, content: cont }]);
+            if (!payload.title || !payload.content) return alert('Preencha título e conteúdo.');
 
-        if (error) {
-            alert('Erro ao salvar: ' + error.message);
-        } else {
+            btn.disabled = true;
+            btn.innerText = 'PROCESSANDO...';
+
+            let result;
+            if (id) {
+                // MODO EDIÇÃO
+                result = await supabaseClient.from('registros').update(payload).eq('id', id);
+            } else {
+                // MODO CRIAÇÃO
+                result = await supabaseClient.from('registros').insert([payload]);
+            }
+
+            if (result.error) {
+                alert('Erro: ' + result.error.message);
+            } else {
+                cancelEdit();
+                carregarDados();
+            }
+            btn.disabled = false;
+        }
+
+        // --- UI E RENDERIZAÇÃO ---
+        function render() {
+            const term = document.getElementById('search').value.toLowerCase();
+            const grid = document.getElementById('grid');
+            grid.innerHTML = '';
+
+            // Filtragem
+            let filtrados = db.filter(i => {
+                const searchStr = (i.title + i.content + i.menu).toLowerCase();
+                return searchStr.includes(term) && (currentFilter === 'Todos' || i.menu === currentFilter);
+            });
+
+            // Ordenação: Favoritos primeiro
+            filtrados.sort((a, b) => {
+                const aFav = favorites.includes(a.id) ? 1 : 0;
+                const bFav = favorites.includes(b.id) ? 1 : 0;
+                return bFav - aFav;
+            });
+
+            document.getElementById('total-count').innerText = `${filtrados.length} procedimentos listados`;
+
+            filtrados.forEach(i => {
+                const isFav = favorites.includes(i.id);
+                grid.innerHTML += `
+                    <div class="kb-card" onclick="openM(${i.id})">
+                        <div>
+                            <span class="menu-tag">${i.menu}</span>
+                            <h3>${i.title}</h3>
+                        </div>
+                        <div class="card-actions">
+                            <div>
+                                <button class="btn-icon ${isFav ? 'fav-active' : ''}" onclick="event.stopPropagation(); toggleFav(${i.id})">★</button>
+                                <span style="font-size:10px; opacity:0.4; margin-left:10px;">${new Date(i.created_at).toLocaleDateString()}</span>
+                            </div>
+                            <div>
+                                <button class="btn-icon" title="Editar" onclick="event.stopPropagation(); startEdit(${i.id})">📝</button>
+                                <button class="btn-icon" title="Excluir" onclick="event.stopPropagation(); del(${i.id})" style="color:var(--carrefour-red)">🗑️</button>
+                            </div>
+                        </div>
+                    </div>`;
+            });
+        }
+
+        // --- FUNÇÕES DE APOIO ---
+        function startEdit(id) {
+            const item = db.find(i => i.id === id);
+            document.getElementById('edit-id').value = item.id;
+            document.getElementById('vert').value = item.menu;
+            document.getElementById('tit').value = item.title;
+            document.getElementById('typ').value = item.type;
+            document.getElementById('cont').value = item.content;
+            
+            document.getElementById('form-title').innerText = 'Editando Registro';
+            document.getElementById('btn-save').innerText = 'ATUALIZAR NA NUVEM';
+            document.getElementById('btn-save').classList.add('btn-edit-mode');
+            document.getElementById('btn-cancel').style.display = 'block';
+            window.scrollTo({top: 0, behavior: 'smooth'});
+        }
+
+        function cancelEdit() {
+            document.getElementById('edit-id').value = '';
             document.getElementById('tit').value = '';
             document.getElementById('cont').value = '';
-            await carregarDados();
+            document.getElementById('form-title').innerText = 'Novo Registro';
+            document.getElementById('btn-save').innerText = 'SALVAR NA NUVEM';
+            document.getElementById('btn-save').classList.remove('btn-edit-mode');
+            document.getElementById('btn-cancel').style.display = 'none';
         }
 
-        btn.innerText = 'SALVAR NA NUVEM';
-        btn.disabled = false;
-    }
-
-    // 5. Deletar da Nuvem
-    async function del(id) {
-        if (confirm('Deseja excluir este procedimento permanentemente da nuvem?')) {
-            const { error } = await supabaseClient
-                .from('registros')
-                .delete()
-                .eq('id', id);
-
-            if (error) alert('Erro ao excluir');
-            else carregarDados();
-        }
-    }
-
-    // 6. Renderizar na tela
-    function render() {
-        const term = document.getElementById('search').value.toLowerCase();
-        const grid = document.getElementById('grid');
-        grid.innerHTML = '';
-
-        const filtrados = db.filter(i => {
-            const matchesSearch = i.title.toLowerCase().includes(term) || i.content.toLowerCase().includes(term);
-            const matchesFilter = currentFilter === 'Todos' || i.menu === currentFilter;
-            return matchesSearch && matchesFilter;
-        });
-
-        if (filtrados.length === 0) {
-            grid.innerHTML = '<p style="grid-column: 1/-1; text-align: center; opacity: 0.5;">Nenhum registro encontrado.</p>';
-            return;
+        function toggleFav(id) {
+            if (favorites.includes(id)) {
+                favorites = favorites.filter(f => f !== id);
+            } else {
+                favorites.push(id);
+            }
+            localStorage.setItem('noc_favs', JSON.stringify(favorites));
+            render();
         }
 
-        filtrados.forEach(i => {
-            grid.innerHTML += `
-                <div class="kb-card" onclick="openM(${i.id})">
-                    <div style="display:flex; justify-content:space-between; align-items:start;">
-                        <span class="menu-tag">${i.menu}</span>
-                        <span style="font-size:9px; opacity:0.5;">${i.type}</span>
-                    </div>
-                    <h3>${i.title}</h3>
-                    <div style="display:flex; justify-content:space-between; align-items:center; margin-top:10px;">
-                        <span style="font-size:10px; opacity:0.4;">${new Date(i.created_at).toLocaleDateString()}</span>
-                        <button class="del-btn" onclick="event.stopPropagation(); del(${i.id})">Remover</button>
-                    </div>
-                </div>`;
-        });
-    }
+        async function del(id) {
+            if (confirm('Tem certeza? Esta ação removerá o item da nuvem para todos.')) {
+                const { error } = await supabaseClient.from('registros').delete().eq('id', id);
+                if (!error) carregarDados();
+            }
+        }
 
-    // Funções de Interface
-    function openM(id) {
-        const item = db.find(i => i.id === id);
-        document.getElementById('m-title').innerText = item.title;
-        document.getElementById('modal-body').innerHTML = `<p style="white-space: pre-wrap; font-size:15px; line-height:1.6;">${item.content}</p>`;
-        document.getElementById('modal').style.display = 'flex';
-    }
+        function openM(id) {
+            const item = db.find(i => i.id === id);
+            document.getElementById('m-title').innerText = item.title;
+            document.getElementById('m-tag').innerText = item.menu;
+            
+            // Linkify: transforma URLs em links clicáveis
+            const contentWithLinks = item.content.replace(/(https?:\/\/[^\s]+)/g, '<a href="$1" target="_blank">$1</a>');
+            document.getElementById('modal-body').innerHTML = contentWithLinks;
+            
+            document.getElementById('modal').style.display = 'flex';
+        }
 
-    function closeM() { document.getElementById('modal').style.display = 'none'; }
-    function filterBy(v, btn) {
-        currentFilter = v;
-        document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
-        btn.classList.add('active');
-        render();
-    }
-    function logout() { sessionStorage.clear(); location.reload(); }
-    function toggleDarkMode() { document.body.classList.toggle('dark-mode'); }
-
-    // Verificar se já está logado ao abrir a página
-    if (sessionStorage.getItem('auth') === 'true') {
-        mostrarPainel();
-    }
-</script>
+        function closeM() { document.getElementById('modal').style.display = 'none'; }
+        function filterBy(v, btn) {
+            currentFilter = v;
+            document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            render();
+        }
+        function logout() { sessionStorage.clear(); location.reload(); }
+        function toggleDarkMode() { document.body.classList.toggle('dark-mode'); }
+        window.onclick = (e) => { if (e.target == document.getElementById('modal')) closeM(); }
+    </script>
 </body>
 </html>
