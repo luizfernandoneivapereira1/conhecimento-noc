@@ -3,143 +3,247 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>NOC Knowledge Base - Pro Cloud V4</title>
+    <title>NOC Knowledge Base - V5 Auth Pro</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         :root {
             --carrefour-blue: #005bbb;
             --carrefour-dark-blue: #00387b;
+            --carrefour-red: #ed1c24;
             --bg-light: #f4f7f9;
             --card-light: #ffffff;
             --text-light: #333;
             --border-light: #dee2e6;
         }
+
         body.dark-mode {
-            --bg-light: #121212; --card-light: #1e1e1e; --text-light: #e0e0e0; --border-light: #333;
+            --bg-light: #121212;
+            --card-light: #1e1e1e;
+            --text-light: #e0e0e0;
+            --border-light: #333;
         }
-        body { font-family: 'Segoe UI', sans-serif; background-color: var(--bg-light); margin: 0; color: var(--text-light); transition: 0.3s; }
-        header { background: var(--carrefour-dark-blue); color: white; padding: 12px 40px; display: flex; justify-content: space-between; align-items: center; }
+
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: var(--bg-light); margin: 0; color: var(--text-light); transition: 0.3s; }
         
-        /* LOGIN */
+        header { background: var(--carrefour-dark-blue); color: white; padding: 12px 40px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 10px rgba(0,0,0,0.2); }
+        
+        /* LOGIN SCREEN */
         #login-screen { display: flex; justify-content: center; align-items: center; height: 100vh; background: var(--carrefour-dark-blue); position: fixed; width: 100%; z-index: 9999; }
-        .login-box { background: white; padding: 40px; border-radius: 12px; width: 320px; text-align: center; color: #333; }
+        .login-box { background: white; padding: 40px; border-radius: 12px; width: 350px; text-align: center; color: #333; box-shadow: 0 10px 25px rgba(0,0,0,0.5); }
         
         #app-screen { display: none; }
         .container { max-width: 1400px; margin: 20px auto; padding: 0 20px; display: grid; grid-template-columns: 350px 1fr; gap: 25px; }
-        .container.full { grid-template-columns: 1fr; }
+        .container.full-width { grid-template-columns: 1fr; }
 
         /* SIDEBAR */
         .sidebar { background: var(--card-light); padding: 25px; border-radius: 12px; border: 1px solid var(--border-light); height: fit-content; position: sticky; top: 20px; }
-        input, select, textarea { width: 100%; padding: 12px; margin-bottom: 12px; border: 1px solid var(--border-light); border-radius: 8px; background: var(--card-light); color: var(--text-light); }
+        input, select, textarea { width: 100%; padding: 12px; margin-bottom: 12px; border: 1px solid var(--border-light); border-radius: 8px; background: var(--card-light); color: var(--text-light); box-sizing: border-box; }
         
-        .btn-save { background: var(--carrefour-blue); color: white; border: none; padding: 15px; border-radius: 8px; cursor: pointer; font-weight: bold; width: 100%; }
-        .upload-container { border: 2px dashed var(--carrefour-blue); padding: 10px; border-radius: 8px; text-align: center; margin-bottom: 15px; position: relative; background: rgba(0,91,187,0.03); }
-        .upload-container input[type="file"] { position: absolute; width: 100%; height: 100%; top: 0; left: 0; opacity: 0; cursor: pointer; }
-        .upload-progress { height: 6px; background: #28a745; width: 0%; border-radius: 3px; transition: 0.4s; }
+        .btn-save { background: var(--carrefour-blue); color: white; border: none; padding: 15px; border-radius: 8px; cursor: pointer; font-weight: bold; width: 100%; transition: 0.2s; }
+        .btn-save:hover { background: var(--carrefour-dark-blue); }
+        .btn-save:disabled { background: #ccc; cursor: not-allowed; }
 
-        /* CARDS */
+        /* UPLOAD */
+        .upload-container { border: 2px dashed var(--carrefour-blue); padding: 15px; border-radius: 8px; text-align: center; margin-bottom: 15px; cursor: pointer; position: relative; background: rgba(0,91,187,0.03); }
+        .upload-container input[type="file"] { position: absolute; width: 100%; height: 100%; top: 0; left: 0; opacity: 0; cursor: pointer; }
+        .upload-progress { height: 6px; background: #28a745; width: 0%; border-radius: 3px; transition: 0.4s; margin-top: 10px; }
+
+        /* GRID */
+        #search { padding: 18px; font-size: 16px; border: 2px solid var(--carrefour-blue); border-radius: 12px; width: 100%; margin-bottom: 25px; background: var(--card-light); color: var(--text-light); }
         .kb-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px; }
-        .kb-card { background: var(--card-light); padding: 20px; border-radius: 12px; border: 1px solid var(--border-light); cursor: pointer; transition: 0.3s; }
+        .kb-card { background: var(--card-light); padding: 20px; border-radius: 12px; border: 1px solid var(--border-light); cursor: pointer; transition: 0.3s; position: relative; }
         .kb-card:hover { transform: translateY(-5px); border-color: var(--carrefour-blue); }
-        .menu-tag { font-size: 10px; background: #e9ecef; padding: 4px 8px; border-radius: 5px; font-weight: bold; }
-        .card-actions { display: flex; justify-content: space-between; align-items: center; margin-top: 15px; border-top: 1px solid #eee; padding-top: 10px; }
         
+        .menu-tag { font-size: 10px; background: #e9ecef; padding: 4px 8px; border-radius: 5px; color: #495057; font-weight: bold; text-transform: uppercase; }
+        .card-actions { display: flex; justify-content: space-between; align-items: center; margin-top: 15px; border-top: 1px solid #eee; padding-top: 10px; }
+
         /* MODAL */
-        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 10000; justify-content: center; align-items: center; }
-        .modal-content { background: var(--card-light); width: 90%; max-width: 900px; padding: 40px; border-radius: 15px; position: relative; max-height: 80vh; overflow-y: auto; }
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 10000; justify-content: center; align-items: center; }
+        .modal-content { background: var(--card-light); width: 90%; max-width: 900px; max-height: 85vh; padding: 40px; border-radius: 15px; overflow-y: auto; position: relative; }
+        .close-modal { position: absolute; top: 20px; right: 25px; font-size: 30px; cursor: pointer; color: #999; }
+
+        .btn-open-file { display: block; background: var(--carrefour-blue); color: white; padding: 15px; text-align: center; border-radius: 8px; text-decoration: none; font-weight: bold; margin-top: 20px; }
     </style>
 </head>
 <body>
 
+    <!-- TELA DE LOGIN (SUPABASE AUTH) -->
     <div id="login-screen">
         <div class="login-box">
+            <img src="https://www.carrefour.com.br/favicon.ico" width="40" style="margin-bottom:10px">
             <h2>NOC Knowledge Base</h2>
-            <input type="text" id="u" placeholder="Usuário (Admin)">
-            <input type="password" id="p" placeholder="Senha">
-            <button onclick="checkLogin()" class="btn-save">ENTRAR</button>
-            <p style="font-size: 11px; margin-top: 15px; color: #666;">Admin: NOC / evolve | Leitor: senha leitura123</p>
+            <p style="font-size:12px; color:#666; margin-bottom: 20px;">Acesso restrito para e-mails autorizados</p>
+            <input type="email" id="email" placeholder="Seu e-mail Carrefour">
+            <input type="password" id="password" placeholder="Sua senha">
+            <button onclick="handleLogin()" class="btn-save" id="btn-login">ENTRAR</button>
+            <div id="login-msg" style="color: red; font-size: 12px; margin-top: 10px;"></div>
         </div>
     </div>
 
+    <!-- TELA PRINCIPAL -->
     <div id="app-screen">
         <header>
-            <h2>KNOWLEDGE BASE | NOC</h2>
-            <div>
-                <button onclick="logout()" style="color:white; background:transparent; border:1px solid white; padding:5px 10px; cursor:pointer;">Sair</button>
+            <h2 style="margin:0">KNOWLEDGE BASE <span style="font-weight:100">| NOC</span></h2>
+            <div style="display:flex; gap:20px; align-items:center;">
+                <span id="user-display" style="font-size: 12px; opacity: 0.8;"></span>
+                <button onclick="toggleDarkMode()" style="background:none; border:none; color:white; cursor:pointer;">🌙</button>
+                <button onclick="handleLogout()" style="background:transparent; border:1px solid white; color:white; padding:5px 10px; border-radius:5px; cursor:pointer;">Sair</button>
             </div>
         </header>
 
         <div class="container" id="main-container">
-            <aside class="sidebar" id="sidebar-admin">
-                <h3>Novo Registro</h3>
+            <!-- Sidebar apenas para Criadores -->
+            <aside class="sidebar" id="sidebar-editor" style="display:none;">
+                <h3 id="form-title">Novo Registro</h3>
                 <input type="hidden" id="edit-id">
+                
+                <label>Menu:</label>
                 <select id="vert">
                     <option value="Operação DVA">Operação DVA</option>
-                    <option value="Matriz de Acessos">Matriz de Acessos</option>
+                    <option value="Matriz de Acessos">📑 Matriz de Acessos</option>
+                    <option value="Parceiros">Parceiros</option>
                     <option value="Lojas">Lojas</option>
+                    <option value="Contatos Úteis">Contatos Úteis</option>
                 </select>
-                <input type="text" id="tit" placeholder="Título">
+
+                <label>Título:</label>
+                <input type="text" id="tit" placeholder="Ex: Troubleshooting VPN">
+
+                <label>Tipo:</label>
                 <select id="typ" onchange="toggleUploadUI()">
-                    <option value="Texto">Texto</option>
-                    <option value="Arquivo">Arquivo (Upload)</option>
+                    <option value="Texto">Texto / Manual</option>
+                    <option value="Arquivo">Arquivo / PDF (Upload)</option>
                 </select>
+
                 <div id="upload-section" style="display:none">
                     <div class="upload-container">
-                        <span id="upload-status">📁 Anexar PDF</span>
+                        <span id="upload-status">📁 Selecionar Arquivo</span>
                         <input type="file" id="file-input" onchange="handleFileUpload()">
                         <div class="upload-progress" id="upload-progress"></div>
                     </div>
                 </div>
-                <textarea id="cont" rows="5" placeholder="Conteúdo"></textarea>
-                <button onclick="saveData()" class="btn-save" id="btn-save">SALVAR</button>
+
+                <label>Conteúdo / Link:</label>
+                <textarea id="cont" rows="8" placeholder="Passo a passo ou link do arquivo..."></textarea>
+
+                <button onclick="saveData()" class="btn-save" id="btn-save">SALVAR NO SUPABASE</button>
+                <button onclick="cancelEdit()" id="btn-cancel" style="display:none; width:100%; margin-top:5px; border:none; padding:8px; cursor:pointer;">Cancelar</button>
             </aside>
 
             <main>
-                <input type="text" id="search" placeholder="🔍 Buscar..." oninput="handleSearch()" style="width:100%; padding:15px; margin-bottom:20px; border-radius:10px; border:2px solid var(--carrefour-blue);">
-                <div class="kb-grid" id="grid"></div>
+                <input type="text" id="search" placeholder="🔍 Pesquisar procedimentos..." oninput="render()">
+                <div class="kb-grid" id="grid">Carregando dados...</div>
             </main>
         </div>
     </div>
 
+    <!-- MODAL -->
     <div id="modal" class="modal" onclick="closeM()">
         <div class="modal-content" onclick="event.stopPropagation()">
-            <h2 id="m-title"></h2>
+            <span class="close-modal" onclick="closeM()">&times;</span>
+            <span id="m-tag" class="menu-tag"></span>
+            <h2 id="m-title" style="color:var(--carrefour-blue); margin-top:15px;"></h2>
+            <hr style="opacity:0.1; margin:20px 0;">
             <div id="modal-body"></div>
         </div>
     </div>
 
     <script>
+        // CONFIGURAÇÕES DO SUPABASE (Substitua se necessário)
         const SUPABASE_URL = 'https://mttpkrnkhqzvnphqsrbn.supabase.co';
         const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im10dHBrcm5raHF6dm5waHFzcmJuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg1ODcxOTYsImV4cCI6MjA5NDE2MzE5Nn0.7g_10vmDK2cHsPJyN64CNiIxVZxJIBKIXBTKmGYY-Ig';
         const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-        let db = [];
-        let role = sessionStorage.getItem('auth');
+        // LISTA DE ADMINS (E-mails que podem editar)
+        // Adicione aqui os e-mails que terão permissão de Criador
+        const ADMIN_EMAILS = ['seu-email@carrefour.com', 'admin@noc.com'];
 
-        function checkLogin() {
-            const u = document.getElementById('u').value.toUpperCase();
-            const p = document.getElementById('p').value;
-            if (u === 'NOC' && p === 'evolve') sessionStorage.setItem('auth', 'admin');
-            else if (p === 'leitura123') sessionStorage.setItem('auth', 'reader');
-            else return alert('Acesso negado');
+        let db = [];
+        let userSession = null;
+
+        // INICIALIZAÇÃO
+        async function init() {
+            const { data: { session } } = await supabaseClient.auth.getSession();
+            if (session) {
+                userSession = session;
+                setupUI(session.user);
+                carregarDados();
+            }
+        }
+        init();
+
+        function setupUI(user) {
+            document.getElementById('login-screen').style.display = 'none';
+            document.getElementById('app-screen').style.display = 'block';
+            document.getElementById('user-display').innerText = user.email;
+
+            // Verifica se é Admin
+            const isAdmin = ADMIN_EMAILS.includes(user.email);
+            if (isAdmin) {
+                document.getElementById('sidebar-editor').style.display = 'block';
+            } else {
+                document.getElementById('main-container').classList.add('full-width');
+            }
+        }
+
+        // LOGIN
+        async function handleLogin() {
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            const btn = document.getElementById('btn-login');
+            
+            btn.disabled = true;
+            btn.innerText = "VERIFICANDO...";
+
+            const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password });
+
+            if (error) {
+                document.getElementById('login-msg').innerText = "Erro: " + error.message;
+                btn.disabled = false;
+                btn.innerText = "ENTRAR";
+            } else {
+                location.reload();
+            }
+        }
+
+        async function handleLogout() {
+            await supabaseClient.auth.signOut();
             location.reload();
         }
 
-        if (role) {
-            document.getElementById('login-screen').style.display = 'none';
-            document.getElementById('app-screen').style.display = 'block';
-            if (role === 'reader') {
-                document.getElementById('sidebar-admin').style.display = 'none';
-                document.getElementById('main-container').classList.add('full');
-            }
-            carregarDados();
-        }
-
+        // DADOS
         async function carregarDados() {
-            const { data } = await supabaseClient.from('registros').select('*').order('created_at', { ascending: false });
-            db = data; render();
+            const { data, error } = await supabaseClient.from('registros').select('*').order('created_at', { ascending: false });
+            if (!error) { db = data; render(); }
         }
 
+        function render() {
+            const term = document.getElementById('search').value.toLowerCase();
+            const grid = document.getElementById('grid');
+            grid.innerHTML = '';
+
+            const isAdmin = ADMIN_EMAILS.includes(userSession.user.email);
+
+            db.filter(i => i.title.toLowerCase().includes(term) || i.menu.toLowerCase().includes(term))
+              .forEach(i => {
+                grid.innerHTML += `
+                    <div class="kb-card" onclick="openM(${i.id})">
+                        <span class="menu-tag">${i.menu}</span>
+                        <h3 style="margin:10px 0">${i.title} ${i.type === 'Arquivo' ? '📎' : ''}</h3>
+                        <div class="card-actions">
+                            <span style="font-size:10px; color:#999">ID: ${i.id}</span>
+                            ${isAdmin ? `
+                                <div>
+                                    <button onclick="event.stopPropagation(); startEdit(${i.id})" style="border:none; cursor:pointer; background:none;">📝</button>
+                                    <button onclick="event.stopPropagation(); deleteR(${i.id})" style="border:none; cursor:pointer; background:none; color:red;">🗑️</button>
+                                </div>
+                            ` : ''}
+                        </div>
+                    </div>`;
+            });
+        }
+
+        // UPLOAD
         function toggleUploadUI() {
             document.getElementById('upload-section').style.display = (document.getElementById('typ').value === 'Arquivo') ? 'block' : 'none';
         }
@@ -147,49 +251,94 @@
         async function handleFileUpload() {
             const file = document.getElementById('file-input').files[0];
             const prog = document.getElementById('upload-progress');
+            const status = document.getElementById('upload-status');
             if (!file) return;
-            prog.style.width = '50%';
-            const name = `${Date.now()}_${file.name}`;
-            const { error } = await supabaseClient.storage.from('arquivos').upload(name, file);
-            if (error) return alert('Erro no bucket: verifique as políticas de storage.');
-            const { data } = supabaseClient.storage.from('arquivos').getPublicUrl(name);
-            document.getElementById('cont').value = data.publicUrl;
-            prog.style.width = '100%';
-            document.getElementById('upload-status').innerText = '✅ Pronto';
+
+            status.innerText = "Enviando...";
+            prog.style.width = "40%";
+
+            const fileName = `${Date.now()}_${file.name}`;
+            const { data, error } = await supabaseClient.storage.from('arquivos').upload(fileName, file);
+
+            if (error) {
+                alert("Erro no upload. Verifique as políticas do bucket.");
+                status.innerText = "Erro";
+                return;
+            }
+
+            const { data: pUrl } = supabaseClient.storage.from('arquivos').getPublicUrl(fileName);
+            document.getElementById('cont').value = pUrl.publicUrl;
+            prog.style.width = "100%";
+            status.innerText = "✅ Concluído";
         }
 
+        // CRUD
         async function saveData() {
-            const payload = { menu: document.getElementById('vert').value, title: document.getElementById('tit').value, type: document.getElementById('typ').value, content: document.getElementById('cont').value };
             const id = document.getElementById('edit-id').value;
+            const payload = {
+                menu: document.getElementById('vert').value,
+                title: document.getElementById('tit').value,
+                type: document.getElementById('typ').value,
+                content: document.getElementById('cont').value
+            };
+
+            if (!payload.title || !payload.content) return alert("Preencha tudo!");
+
             if (id) await supabaseClient.from('registros').update(payload).eq('id', id);
             else await supabaseClient.from('registros').insert([payload]);
-            location.reload();
+
+            cancelEdit();
+            carregarDados();
         }
 
-        function render() {
-            const term = document.getElementById('search').value.toLowerCase();
-            const grid = document.getElementById('grid');
-            grid.innerHTML = '';
-            db.filter(i => i.title.toLowerCase().includes(term)).forEach(i => {
-                grid.innerHTML += `
-                    <div class="kb-card" onclick="openM(${i.id})">
-                        <span class="menu-tag">${i.menu}</span>
-                        <h3>${i.title} ${i.type === 'Arquivo' ? '📎' : ''}</h3>
-                        ${role === 'admin' ? `<button onclick="event.stopPropagation(); deleteR(${i.id})">🗑️</button>` : ''}
-                    </div>`;
-            });
+        async function deleteR(id) {
+            if (confirm("Deseja excluir permanentemente?")) {
+                await supabaseClient.from('registros').delete().eq('id', id);
+                carregarDados();
+            }
         }
 
-        async function deleteR(id) { if(confirm('Excluir?')) { await supabaseClient.from('registros').delete().eq('id', id); carregarDados(); } }
+        function startEdit(id) {
+            const item = db.find(x => x.id === id);
+            document.getElementById('edit-id').value = item.id;
+            document.getElementById('vert').value = item.menu;
+            document.getElementById('tit').value = item.title;
+            document.getElementById('typ').value = item.type;
+            document.getElementById('cont').value = item.content;
+            document.getElementById('btn-cancel').style.display = 'block';
+            document.getElementById('form-title').innerText = "Editando Registro";
+            toggleUploadUI();
+            window.scrollTo(0,0);
+        }
+
+        function cancelEdit() {
+            document.getElementById('edit-id').value = '';
+            document.getElementById('tit').value = '';
+            document.getElementById('cont').value = '';
+            document.getElementById('btn-cancel').style.display = 'none';
+            document.getElementById('form-title').innerText = "Novo Registro";
+        }
+
+        // UI HELPERS
         function openM(id) {
             const i = db.find(x => x.id === id);
             document.getElementById('m-title').innerText = i.title;
-            document.getElementById('modal-body').innerHTML = i.type === 'Arquivo' ? `<a href="${i.content}" target="_blank" style="display:block; padding:20px; background:var(--carrefour-blue); color:white; text-align:center; text-decoration:none; border-radius:10px;">ABRIR DOCUMENTO PDF</a>` : `<div style="white-space:pre-wrap">${i.content}</div>`;
+            document.getElementById('m-tag').innerText = i.menu;
+            
+            let bodyHTML = "";
+            if (i.type === 'Arquivo') {
+                bodyHTML = `<a href="${i.content}" target="_blank" class="btn-open-file">📄 VISUALIZAR ARQUIVO ANEXADO</a>`;
+            } else {
+                bodyHTML = `<div style="white-space: pre-wrap; line-height:1.6;">${i.content}</div>`;
+            }
+            
+            document.getElementById('modal-body').innerHTML = bodyHTML;
             document.getElementById('modal').style.display = 'flex';
         }
+
         function closeM() { document.getElementById('modal').style.display = 'none'; }
-        function logout() { sessionStorage.clear(); location.reload(); }
-        function handleSearch() { render(); }
+        function toggleDarkMode() { document.body.classList.toggle('dark-mode'); }
+        window.onclick = (e) => { if (e.target == document.getElementById('modal')) closeM(); }
     </script>
 </body>
 </html>
