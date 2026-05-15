@@ -3,8 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>NOC Knowledge Base - V5 Enterprise Pro</title>
+    <title>NOC Knowledge Base - V6 Enterprise Ultra</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <link href="https://cdn.jsdelivr.net/npm/quill@2.0.2/dist/quill.snow.css" rel="stylesheet" />
+    <script src="https://cdn.jsdelivr.net/npm/quill@2.0.2/dist/quill.js"></script>
+    
     <style>
         :root {
             --carrefour-blue: #005bbb;
@@ -15,46 +18,49 @@
             --border-light: #dee2e6;
         }
 
-        body.dark-mode {
-            --bg-light: #121212; --card-light: #1e1e1e; --text-light: #e0e0e0; --border-light: #333;
-        }
-
         body { font-family: 'Segoe UI', Tahoma, sans-serif; background-color: var(--bg-light); margin: 0; color: var(--text-light); transition: 0.3s; }
-        
         header { background: var(--carrefour-dark-blue); color: white; padding: 12px 40px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 10px rgba(0,0,0,0.2); }
         
-        /* TELA DE LOGIN */
         #login-screen { display: flex; justify-content: center; align-items: center; height: 100vh; background: var(--carrefour-dark-blue); position: fixed; width: 100%; z-index: 9999; }
         .login-box { background: white; padding: 40px; border-radius: 12px; width: 350px; text-align: center; color: #333; box-shadow: 0 10px 25px rgba(0,0,0,0.3); }
         
         #app-screen { display: none; }
-        .container { max-width: 1400px; margin: 20px auto; padding: 0 20px; display: grid; grid-template-columns: 350px 1fr; gap: 25px; }
+        .container { max-width: 1400px; margin: 20px auto; padding: 0 20px; display: grid; grid-template-columns: 380px 1fr; gap: 25px; }
         .container.full-width { grid-template-columns: 1fr; }
 
-        /* SIDEBAR (CRIADOR) */
-        .sidebar { background: var(--card-light); padding: 25px; border-radius: 12px; border: 1px solid var(--border-light); height: fit-content; position: sticky; top: 20px; }
-        input, select, textarea { width: 100%; padding: 12px; margin-bottom: 12px; border: 1px solid var(--border-light); border-radius: 8px; background: var(--card-light); color: var(--text-light); box-sizing: border-box; }
+        .sidebar { background: var(--card-light); padding: 25px; border-radius: 12px; border: 1px solid var(--border-light); height: fit-content; position: sticky; top: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
+        input, select { width: 100%; padding: 12px; margin-bottom: 12px; border: 1px solid var(--border-light); border-radius: 8px; background: var(--card-light); color: var(--text-light); box-sizing: border-box; }
         
-        .btn-save { background: var(--carrefour-blue); color: white; border: none; padding: 15px; border-radius: 8px; cursor: pointer; font-weight: bold; width: 100%; }
-        .btn-save:hover { background: var(--carrefour-dark-blue); }
-        .btn-save:disabled { background: #ccc; cursor: not-allowed; }
+        /* Área do Editor Rico */
+        .editor-wrapper { margin-bottom: 15px; background: white; border-radius: 8px; overflow: hidden; }
+        #editor-container { height: 300px; font-size: 14px; }
 
-        /* UPLOAD */
+        .btn-save { background: var(--carrefour-blue); color: white; border: none; padding: 15px; border-radius: 8px; cursor: pointer; font-weight: bold; width: 100%; font-size: 14px; transition: 0.2s; }
+        .btn-save:hover { background: var(--carrefour-dark-blue); }
+        
+        /* FILTROS E MENUS DE CATEGORIAS */
+        .category-menu { display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; }
+        .category-btn { background: var(--card-light); border: 1px solid var(--border-light); padding: 10px 18px; border-radius: 20px; cursor: pointer; font-weight: 600; color: #555; transition: 0.2s; font-size: 13px; }
+        .category-btn:hover, .category-btn.active { background: var(--carrefour-blue); color: white; border-color: var(--carrefour-blue); }
+
         .upload-container { border: 2px dashed var(--carrefour-blue); padding: 15px; border-radius: 8px; text-align: center; margin-bottom: 15px; cursor: pointer; position: relative; background: rgba(0,91,187,0.03); }
         .upload-container input[type="file"] { position: absolute; width: 100%; height: 100%; top: 0; left: 0; opacity: 0; cursor: pointer; }
 
-        /* CARDS / TIMELINE */
-        #search { padding: 18px; font-size: 16px; border: 2px solid var(--carrefour-blue); border-radius: 12px; width: 100%; margin-bottom: 25px; background: var(--card-light); color: var(--text-light); }
+        #search { padding: 18px; font-size: 16px; border: 2px solid var(--border-light); border-radius: 12px; width: 100%; margin-bottom: 20px; background: var(--card-light); color: var(--text-light); box-sizing: border-box; transition: 0.2s; }
+        #search:focus { border-color: var(--carrefour-blue); outline: none; }
+        
         .kb-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px; }
-        .kb-card { background: var(--card-light); padding: 20px; border-radius: 12px; border: 1px solid var(--border-light); cursor: pointer; transition: 0.3s; position: relative; }
-        .kb-card:hover { transform: translateY(-5px); border-color: var(--carrefour-blue); }
+        .kb-card { background: var(--card-light); padding: 20px; border-radius: 12px; border: 1px solid var(--border-light); cursor: pointer; transition: 0.3s; position: relative; box-shadow: 0 4px 6px rgba(0,0,0,0.02); }
+        .kb-card:hover { transform: translateY(-5px); border-color: var(--carrefour-blue); box-shadow: 0 6px 12px rgba(0,91,187,0.1); }
         .menu-tag { font-size: 10px; background: #e9ecef; padding: 4px 8px; border-radius: 5px; font-weight: bold; text-transform: uppercase; color: #495057; }
         .card-actions { display: flex; justify-content: space-between; align-items: center; margin-top: 15px; border-top: 1px solid #eee; padding-top: 10px; }
 
-        /* MODAL INTERNO */
         .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 10000; justify-content: center; align-items: center; }
-        .modal-content { background: var(--card-light); width: 90%; max-width: 950px; padding: 40px; border-radius: 15px; position: relative; max-height: 85vh; overflow-y: auto; box-sizing: border-box; }
+        .modal-content { background: var(--card-light); width: 95%; max-width: 1100px; padding: 40px; border-radius: 15px; position: relative; max-height: 90vh; overflow-y: auto; box-sizing: border-box; }
         .close-modal { position: absolute; top: 20px; right: 25px; font-size: 30px; cursor: pointer; color: #999; }
+        
+        /* Renderização das Imagens Dentro do Modal */
+        .modal-body-content img { max-width: 100%; height: auto; border-radius: 8px; margin: 10px 0; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
     </style>
 </head>
 <body>
@@ -63,9 +69,9 @@
         <div class="login-box">
             <img src="https://www.carrefour.com.br/favicon.ico" width="40" style="margin-bottom:10px">
             <h2>NOC Knowledge Base</h2>
-            <p style="font-size:12px; color:#666; margin-bottom: 20px;">Acesso Restrito via E-mail Cadastrado</p>
-            <input type="email" id="email" placeholder="Seu e-mail corporativo">
-            <input type="password" id="password" placeholder="Sua senha">
+            <p style="font-size:12px; color:#666; margin-bottom: 20px;">Acesso Corporativo Integrado</p>
+            <input type="email" id="email" placeholder="E-mail corporativo">
+            <input type="password" id="password" placeholder="Senha">
             <button onclick="handleLogin()" class="btn-save" id="btn-login">ENTRAR</button>
             <div id="login-msg" style="color: red; font-size: 12px; margin-top: 10px;"></div>
         </div>
@@ -82,25 +88,25 @@
 
         <div class="container" id="main-container">
             <aside class="sidebar" id="sidebar-editor" style="display:none;">
-                <h3 id="form-title">Novo Registro</h3>
+                <h3 id="form-title" style="margin-top:0; color:var(--carrefour-dark-blue);">Novo Registro</h3>
                 <input type="hidden" id="edit-id">
                 
-                <label>Menu / Categoria:</label>
+                <label style="font-size:12px; font-weight:bold;">Categoria:</label>
                 <select id="vert">
                     <option value="Operação DVA">Operação DVA</option>
-                    <option value="Matriz de Acessos">📑 Matriz de Acessos</option>
+                    <option value="Matriz de Acessos">Matriz de Acessos</option>
                     <option value="Parceiros">Parceiros</option>
                     <option value="Lojas">Lojas</option>
                     <option value="Contatos Úteis">Contatos Úteis</option>
                 </select>
                 
-                <label>Título:</label>
-                <input type="text" id="tit" placeholder="Ex: Acionamento Link de Dados">
+                <label style="font-size:12px; font-weight:bold;">Título do Procedimento:</label>
+                <input type="text" id="tit" placeholder="Ex: Reset de Senha do Roteador">
                 
-                <label>Tipo de Conteúdo:</label>
+                <label style="font-size:12px; font-weight:bold;">Formato original:</label>
                 <select id="typ" onchange="toggleUploadUI()">
-                    <option value="Texto">Texto / Manual Descritivo</option>
-                    <option value="Arquivo">Arquivo / PDF (Upload Integrado)</option>
+                    <option value="Texto">Documento Digital / Colar do Word</option>
+                    <option value="Arquivo">Arquivo Anexo / PDF</option>
                 </select>
                 
                 <div id="upload-section" style="display:none">
@@ -110,16 +116,28 @@
                     </div>
                 </div>
                 
-                <label>Conteúdo (Texto ou URL do PDF):</label>
-                <textarea id="cont" rows="8" placeholder="Digite as instruções do manual aqui..."></textarea>
+                <label style="font-size:12px; font-weight:bold;">Conteúdo / Documentação (Aceita Imagens e Word):</label>
+                <div class="editor-wrapper">
+                    <div id="editor-container"></div>
+                </div>
                 
-                <button onclick="saveData()" class="btn-save" id="btn-save">SALVAR NO BANCO</button>
-                <button onclick="cancelEdit()" id="btn-cancel" style="display:none; width:100%; margin-top:5px; border:none; padding:8px; cursor:pointer;">Cancelar Edição</button>
+                <button onclick="saveData()" class="btn-save">SALVAR REGISTRO</button>
+                <button onclick="cancelEdit()" id="btn-cancel" style="display:none; width:100%; margin-top:5px; border:none; padding:8px; cursor:pointer; background:#eee; border-radius:8px;">Cancelar Edição</button>
             </aside>
 
             <main>
-                <input type="text" id="search" placeholder="🔍 Pesquisar por título ou categoria..." oninput="render()">
-                <div class="kb-grid" id="grid">Carregando base de conhecimento...</div>
+                <input type="text" id="search" placeholder="🔍 Digite qualquer palavra para buscar no título, categoria ou dentro dos manuais..." oninput="render()">
+                
+                <div class="category-menu" id="category-bar">
+                    <button class="category-btn active" onclick="filterCategory('Todos', this)">Todos os Manuais</button>
+                    <button class="category-btn" onclick="filterCategory('Operação DVA', this)">Operação DVA</button>
+                    <button class="category-btn" onclick="filterCategory('Matriz de Acessos', this)">Matriz de Acessos</button>
+                    <button class="category-btn" onclick="filterCategory('Parceiros', this)">Parceiros</button>
+                    <button class="category-btn" onclick="filterCategory('Lojas', this)">Lojas</button>
+                    <button class="category-btn" onclick="filterCategory('Contatos Úteis', this)">Contatos Úteis</button>
+                </div>
+
+                <div class="kb-grid" id="grid">Carregando base de conhecimento do NOC...</div>
             </main>
         </div>
     </div>
@@ -129,27 +147,41 @@
             <span class="close-modal" onclick="closeM()">&times;</span>
             <h2 id="m-title" style="color:var(--carrefour-blue); margin-top:0;"></h2>
             <hr style="opacity:0.1; margin-bottom:20px;">
-            <div id="modal-body"></div>
+            <div id="modal-body" class="modal-body-content"></div>
         </div>
     </div>
 
     <script>
-        // CONFIGURAÇÕES DO CONTEXTO SUPABASE
         const SUPABASE_URL = 'https://mttpkrnkhqzvnphqsrbn.supabase.co';
         const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im10dHBrcm5raHF6dm5waHFzcmJuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg1ODcxOTYsImV4cCI6MjA5NDE2MzE5Nn0.7g_10vmDK2cHsPJyN64CNiIxVZxJIBKIXBTKmGYY-Ig';
         const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
         let db = [];
         let userSession = null;
+        let selectedCategory = 'Todos';
+        let quill;
 
-        // INICIALIZAÇÃO E CHECAGEM DE SESSÃO
+        // Inicializa o Editor Rico (Quill)
+        function initQuill() {
+            quill = new Quill('#editor-container', {
+                modules: {
+                    toolbar: [
+                        [{ 'header': [1, 2, 3, false] }],
+                        ['bold', 'italic', 'underline', 'strike'],
+                        [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+                        ['link', 'image'],
+                        ['clean']
+                    ]
+                },
+                placeholder: 'Cole o conteúdo do seu Word aqui (tabelas, textos e imagens funcionam direto)...',
+                theme: 'snow'
+            });
+        }
+
         async function init() {
+            initQuill();
             const { data: { session } } = await supabaseClient.auth.getSession();
-            if (session) {
-                userSession = session;
-                setupUI(session.user);
-                carregarDados();
-            }
+            if (session) { userSession = session; setupUI(session.user); carregarDados(); }
         }
         init();
 
@@ -157,131 +189,114 @@
             document.getElementById('login-screen').style.display = 'none';
             document.getElementById('app-screen').style.display = 'block';
             document.getElementById('user-display').innerText = user.email;
-
-            // VALIDAÇÃO CORPORATIVA DA ROLE VINDA DO SUPABASE (USER METADATA)
             const isAdmin = (user.app_metadata?.role === 'admin') || (user.user_metadata?.role === 'admin');
-
-            if (isAdmin) {
-                document.getElementById('sidebar-editor').style.display = 'block';
-            } else {
-                document.getElementById('main-container').classList.add('full-width');
-            }
+            if (isAdmin) document.getElementById('sidebar-editor').style.display = 'block';
+            else document.getElementById('main-container').classList.add('full-width');
         }
 
-        // CONTROLADORES DE AUTENTICAÇÃO
         async function handleLogin() {
             const email = document.getElementById('email').value;
             const password = document.getElementById('password').value;
-            const btn = document.getElementById('btn-login');
-            
-            btn.disabled = true; btn.innerText = "VERIFICANDO SESSÃO...";
-            const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password });
-            
-            if (error) {
-                document.getElementById('login-msg').innerText = "Acesso Negado: Credenciais inválidas.";
-                btn.disabled = false; btn.innerText = "ENTRAR";
-            } else { 
-                location.reload(); 
-            }
+            const { error } = await supabaseClient.auth.signInWithPassword({ email, password });
+            if (error) document.getElementById('login-msg').innerText = "Credenciais inválidas.";
+            else location.reload();
         }
 
-        async function handleLogout() { 
-            await supabaseClient.auth.signOut(); 
-            location.reload(); 
-        }
+        async function handleLogout() { await supabaseClient.auth.signOut(); location.reload(); }
 
-        // CARREGAMENTO DE FLUXOS DO BANCO DE DADOS
         async function carregarDados() {
-            const { data, error } = await supabaseClient.from('registros').select('*').order('created_at', { ascending: false });
-            if (!error) { db = data || []; render(); }
+            const { data } = await supabaseClient.from('registros').select('*').order('created_at', { ascending: false });
+            db = data || []; render();
         }
 
+        function filterCategory(cat, btn) {
+            selectedCategory = cat;
+            document.querySelectorAll('.category-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            render();
+        }
+
+        // Busca global inteligente (Procura no texto limpo e formatado do Word)
         function render() {
             const term = document.getElementById('search').value.toLowerCase();
             const grid = document.getElementById('grid');
             grid.innerHTML = '';
-            
             const isAdmin = (userSession.user.app_metadata?.role === 'admin') || (userSession.user.user_metadata?.role === 'admin');
 
-            db.filter(i => i.title.toLowerCase().includes(term) || i.menu.toLowerCase().includes(term)).forEach(i => {
+            db.filter(i => {
+                const matchesSearch = i.title.toLowerCase().includes(term) || 
+                                      i.menu.toLowerCase().includes(term) || 
+                                      (i.content && i.content.toLowerCase().includes(term));
+                const matchesCategory = selectedCategory === 'Todos' || i.menu === selectedCategory;
+                return matchesSearch && matchesCategory;
+            }).forEach(i => {
                 grid.innerHTML += `
                     <div class="kb-card" onclick="openM(${i.id})">
                         <span class="menu-tag">${i.menu}</span>
-                        <h3 style="margin:12px 0 8px 0;">${i.title} ${i.type === 'Arquivo' ? '📎' : ''}</h3>
+                        <h3 style="margin:12px 0 8px 0; color:var(--carrefour-dark-blue); font-size:16px;">${i.title} ${i.type === 'Arquivo' ? '📎' : '📝'}</h3>
                         <div class="card-actions">
-                            <span style="font-size:11px; color:#777; font-weight:bold;">${i.type === 'Arquivo' ? 'Documento PDF' : 'Manual Técnico'}</span>
-                            ${isAdmin ? `
-                                <div>
-                                    <button onclick="event.stopPropagation(); startEdit(${i.id})" style="border:none; background:none; cursor:pointer; font-size:14px; margin-right:5px;">📝</button>
-                                    <button onclick="event.stopPropagation(); deleteR(${i.id})" style="color:red; border:none; background:none; cursor:pointer; font-size:14px;">🗑️</button>
-                                </div>
-                            ` : ''}
+                            <span style="font-size:11px; color:#777; font-weight:bold;">${i.type === 'Arquivo' ? 'Anexo PDF' : 'Wiki / Manual'}</span>
+                            ${isAdmin ? `<div>
+                                <button onclick="event.stopPropagation(); startEdit(${i.id})" style="border:none; background:none; cursor:pointer; font-size:14px; margin-right:5px;">📝</button>
+                                <button onclick="event.stopPropagation(); deleteR(${i.id})" style="color:red; border:none; background:none; cursor:pointer; font-size:14px;">🗑️</button>
+                            </div>` : ''}
                         </div>
                     </div>`;
             });
-        }
-
-        // GESTÃO DE ARQUIVOS (STORAGE COMPATÍVEL COM AUTHENTICATED RLS)
-        function toggleUploadUI() { 
-            document.getElementById('upload-section').style.display = (document.getElementById('typ').value === 'Arquivo') ? 'block' : 'none'; 
         }
 
         async function handleFileUpload() {
             const file = document.getElementById('file-input').files[0];
             const status = document.getElementById('upload-status');
             if (!file) return;
-
-            status.innerText = "⏳ Subindo arquivo para o Storage...";
-            
-            // 1. Limpa o nome do arquivo (Tira acentos, cedilha e troca espaços por _)
-            const safeName = file.name
-                .normalize("NFD").replace(/[\u0300-\u036f]/g, "") // Remove acentos
-                .replace(/[^a-zA-Z0-9.-]/g, "_");                 // Troca espaços/caracteres estranhos por _
-
-            // 2. Cria o nome final seguro
+            status.innerText = "⏳ Subindo PDF para o Storage...";
+            const safeName = file.name.normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-zA-Z0-9.-]/g, "_");
             const fileName = `${Date.now()}_${safeName}`;
-            
             const { error } = await supabaseClient.storage.from('arquivos').upload(fileName, file);
-            
-            if (error) {
-                console.error("Erro do Supabase:", error);
-                alert("Erro no upload! Verifique o console.");
-                status.innerText = "❌ Falha no envio";
-                return;
-            }
-
+            if (error) { status.innerText = "❌ Falha no envio"; return; }
             const { data } = supabaseClient.storage.from('arquivos').getPublicUrl(fileName);
-            document.getElementById('cont').value = data.publicUrl;
-            status.innerText = "✅ Arquivo integrado com sucesso!";
+            
+            // Insere o link no editor rico de forma amigável
+            quill.root.innerHTML += `<p><a href="${data.publicUrl}" target="_blank">📥 Clique aqui para abrir o PDF original: ${file.name}</a></p><p>Link do Arquivo: ${data.publicUrl}</p>`;
+            status.innerText = "✅ PDF anexado com sucesso!";
         }
 
-        // OPERAÇÕES DO BANCO (CRUD)
         async function saveData() {
             const id = document.getElementById('edit-id').value;
             const payload = { 
                 menu: document.getElementById('vert').value, 
                 title: document.getElementById('tit').value, 
                 type: document.getElementById('typ').value, 
-                content: document.getElementById('cont').value 
+                content: quill.root.innerHTML // Salva a formatação HTML completa (Word/Imagens)
             };
-
-            if (!payload.title || !payload.content) return alert("Por favor, preencha todos os campos.");
-
-            if (id) {
-                await supabaseClient.from('registros').update(payload).eq('id', id);
-            } else {
-                await supabaseClient.from('registros').insert([payload]);
-            }
             
-            cancelEdit();
-            carregarDados();
+            if (!payload.title || quill.getText().trim() === "") return alert("Preencha o título e o conteúdo.");
+
+            if (id) await supabaseClient.from('registros').update(payload).eq('id', id);
+            else await supabaseClient.from('registros').insert([payload]);
+            location.reload();
         }
 
-        async function deleteR(id) { 
-            if(confirm("Tem certeza que deseja excluir permanentemente este procedimento?")) { 
-                await supabaseClient.from('registros').delete().eq('id', id); 
-                carregarDados(); 
-            } 
+        async function deleteR(id) { if(confirm("Deseja deletar permanentemente este procedimento?")) { await supabaseClient.from('registros').delete().eq('id', id); carregarDados(); } }
+        function toggleUploadUI() { document.getElementById('upload-section').style.display = (document.getElementById('typ').value === 'Arquivo') ? 'block' : 'none'; }
+        
+        function openM(id) {
+            const i = db.find(x => x.id === id);
+            const modalBody = document.getElementById('modal-body');
+            document.getElementById('m-title').innerText = i.title;
+            
+            if (i.type === 'Arquivo') {
+                const urlMatch = i.content.match(/https:\/\/[^\s"']+/);
+                const pdfUrl = urlMatch ? urlMatch[0] : '';
+                modalBody.innerHTML = `
+                    <div style="height: 70vh; width: 100%;">
+                        <iframe src="${pdfUrl}#toolbar=0" width="100%" height="100%" style="border: none; border-radius: 8px; background:#fafafa;"></iframe>
+                    </div>`;
+            } else {
+                // Renderiza o texto do Word perfeitamente formatado com imagens inclusas
+                modalBody.innerHTML = `<div style="line-height: 1.6; font-size:15px;">${i.content}</div>`;
+            }
+            document.getElementById('modal').style.display = 'flex';
         }
 
         function startEdit(id) {
@@ -290,51 +305,14 @@
             document.getElementById('vert').value = item.menu;
             document.getElementById('tit').value = item.title;
             document.getElementById('typ').value = item.type;
-            document.getElementById('cont').value = item.content;
+            quill.root.innerHTML = item.content;
             document.getElementById('btn-cancel').style.display = 'block';
             document.getElementById('form-title').innerText = "Editando Procedimento";
-            toggleUploadUI();
-            window.scrollTo(0,0);
+            toggleUploadUI(); window.scrollTo(0,0);
         }
 
-        function cancelEdit() {
-            document.getElementById('edit-id').value = '';
-            document.getElementById('tit').value = '';
-            document.getElementById('cont').value = '';
-            document.getElementById('btn-cancel').style.display = 'none';
-            document.getElementById('form-title').innerText = "Novo Registro";
-            document.getElementById('upload-status').innerText = "📁 Clique para anexar o PDF";
-        }
-
-        // EXIBIÇÃO EM MODAL (COM IFRAME DE PDF EMBUTIDO)
-        function openM(id) {
-            const i = db.find(x => x.id === id);
-            const modalBody = document.getElementById('modal-body');
-            document.getElementById('m-title').innerText = i.title;
-            
-            if (i.type === 'Arquivo') {
-                modalBody.innerHTML = `
-                    <div style="height: 68vh; width: 100%;">
-                        <iframe 
-                            src="${i.content}#toolbar=0" 
-                            width="100%" 
-                            height="100%" 
-                            style="border: none; border-radius: 8px; background:#fafafa;">
-                        </iframe>
-                        <div style="margin-top: 12px; text-align: right;">
-                            <a href="${i.content}" target="_blank" style="font-size: 13px; color: var(--carrefour-blue); text-decoration: none; font-weight: bold;">
-                                ↗️ Abrir PDF em aba separada / Download original
-                            </a>
-                        </div>
-                    </div>`;
-            } else {
-                modalBody.innerHTML = `<div style="white-space: pre-wrap; line-height: 1.6; padding: 5px; font-size:15px;">${i.content}</div>`;
-            }
-            document.getElementById('modal').style.display = 'flex';
-        }
-
+        function cancelEdit() { location.reload(); }
         function closeM() { document.getElementById('modal').style.display = 'none'; }
-        window.onclick = (e) => { if (e.target == document.getElementById('modal')) closeM(); }
     </script>
 </body>
 </html>
