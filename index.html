@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>NOC Knowledge Base - Pro Cloud</title>
+    <title>NOC Knowledge Base - Pro Cloud V3</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         :root {
@@ -35,48 +35,50 @@
         #app-screen { display: none; }
         .container { max-width: 1400px; margin: 20px auto; padding: 0 20px; display: grid; grid-template-columns: 350px 1fr; gap: 25px; }
 
-        /* SIDEBAR / FORM */
+        /* SIDEBAR */
         .sidebar { background: var(--card-light); padding: 25px; border-radius: 12px; border: 1px solid var(--border-light); height: fit-content; position: sticky; top: 20px; }
-        .sidebar h3 { margin-top: 0; color: var(--carrefour-blue); border-bottom: 2px solid #eee; padding-bottom: 10px; }
-        label { font-size: 12px; font-weight: bold; display: block; margin-bottom: 5px; color: var(--carrefour-blue); }
-        input, select, textarea { width: 100%; padding: 12px; margin-bottom: 15px; border: 1px solid var(--border-light); border-radius: 8px; background: var(--card-light); color: var(--text-light); font-size: 14px; }
+        input, select, textarea { width: 100%; padding: 12px; margin-bottom: 12px; border: 1px solid var(--border-light); border-radius: 8px; background: var(--card-light); color: var(--text-light); box-sizing: border-box; }
         
         .btn-save { background: var(--carrefour-blue); color: white; border: none; padding: 15px; border-radius: 8px; cursor: pointer; font-weight: bold; width: 100%; transition: 0.2s; }
         .btn-save:hover { background: var(--carrefour-dark-blue); }
         .btn-edit-mode { background: #ff9800 !important; }
         .btn-cancel { background: #666; color: white; border: none; padding: 8px; border-radius: 8px; cursor: pointer; width: 100%; margin-top: 5px; display: none; }
 
-        /* MAIN CONTENT */
+        /* UPLOAD BOX */
+        .upload-container { border: 2px dashed var(--carrefour-blue); padding: 15px; border-radius: 8px; text-align: center; margin-bottom: 15px; cursor: pointer; position: relative; background: rgba(0,91,187,0.03); }
+        .upload-container input[type="file"] { position: absolute; width: 100%; height: 100%; top: 0; left: 0; opacity: 0; cursor: pointer; }
+        .upload-progress { height: 6px; background: #28a745; width: 0%; border-radius: 3px; transition: 0.4s; margin-top: 10px; }
+
+        /* GRID & CARDS */
         .filter-bar { display: flex; gap: 10px; margin-bottom: 20px; border-bottom: 2px solid var(--border-light); padding-bottom: 15px; overflow-x: auto; }
         .filter-btn { padding: 10px 20px; border-radius: 25px; border: 1px solid var(--carrefour-blue); background: transparent; color: var(--carrefour-blue); cursor: pointer; font-weight: bold; white-space: nowrap; transition: 0.2s; }
         .filter-btn.active { background: var(--carrefour-blue); color: white; }
         
         #search { padding: 18px; font-size: 16px; border: 2px solid var(--carrefour-blue); border-radius: 12px; width: 100%; margin-bottom: 25px; background: var(--card-light); color: var(--text-light); box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
 
-        /* GRID & CARDS */
         .kb-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px; }
-        .kb-card { background: var(--card-light); padding: 20px; border-radius: 12px; border: 1px solid var(--border-light); cursor: pointer; position: relative; transition: 0.3s; display: flex; flex-direction: column; justify-content: space-between; }
+        .kb-card { background: var(--card-light); padding: 20px; border-radius: 12px; border: 1px solid var(--border-light); cursor: pointer; transition: 0.3s; display: flex; flex-direction: column; justify-content: space-between; }
         .kb-card:hover { transform: translateY(-5px); box-shadow: 0 10px 20px rgba(0,0,0,0.1); border-color: var(--carrefour-blue); }
-        .kb-card h3 { margin: 12px 0; font-size: 18px; color: var(--carrefour-blue); }
         
         .menu-tag { font-size: 10px; background: #e9ecef; padding: 4px 8px; border-radius: 5px; color: #495057; font-weight: bold; text-transform: uppercase; }
         body.dark-mode .menu-tag { background: #333; color: #ccc; }
 
         .card-actions { display: flex; justify-content: space-between; align-items: center; margin-top: 15px; border-top: 1px solid #eee; padding-top: 10px; }
         .btn-icon { background: none; border: none; cursor: pointer; font-size: 16px; opacity: 0.6; transition: 0.2s; }
-        .btn-icon:hover { opacity: 1; transform: scale(1.2); }
         .fav-active { color: #ffc107; opacity: 1; }
 
         /* MODAL */
         .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 10000; justify-content: center; align-items: center; backdrop-filter: blur(5px); }
-        .modal-content { background: var(--card-light); width: 90%; max-width: 900px; max-height: 85vh; padding: 40px; border-radius: 15px; position: relative; overflow-y: auto; box-shadow: 0 20px 50px rgba(0,0,0,0.3); }
+        .modal-content { background: var(--card-light); width: 95%; max-width: 1000px; max-height: 85vh; padding: 40px; border-radius: 15px; position: relative; overflow-y: auto; box-shadow: 0 20px 50px rgba(0,0,0,0.3); }
         .close-modal { position: absolute; top: 20px; right: 25px; font-size: 35px; cursor: pointer; color: #999; }
         
-        .content-view { white-space: pre-wrap; font-size: 16px; line-height: 1.8; color: var(--text-light); }
-        .content-view a { color: var(--carrefour-blue); font-weight: bold; }
+        /* MATRIZ TABLE */
+        .matriz-table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+        .matriz-table th { background: var(--carrefour-blue); color: white; padding: 12px; text-align: left; }
+        .matriz-table td { padding: 12px; border-bottom: 1px solid var(--border-light); }
 
-        /* UTILS */
-        .stats { font-size: 12px; margin-bottom: 10px; opacity: 0.7; }
+        .btn-open-file { display: inline-block; background: var(--carrefour-blue); color: white; padding: 15px 30px; border-radius: 8px; text-decoration: none; font-weight: bold; margin-top: 20px; transition: 0.3s; }
+        .btn-open-file:hover { background: var(--carrefour-dark-blue); transform: scale(1.05); }
     </style>
 </head>
 <body>
@@ -85,7 +87,7 @@
         <div class="login-box">
             <img src="https://www.carrefour.com.br/favicon.ico" width="40" style="margin-bottom:10px">
             <h2>NOC Knowledge Base</h2>
-            <p style="font-size:12px; color:#666">Cloud Management v2.0</p>
+            <p style="font-size:12px; color:#666">Cloud Management v3.0</p>
             <input type="text" id="u" placeholder="Usuário">
             <input type="password" id="p" placeholder="Senha">
             <button onclick="checkLogin()" class="btn-save">ENTRAR NO SISTEMA</button>
@@ -94,12 +96,10 @@
 
     <div id="app-screen">
         <header>
-            <div style="display:flex; align-items:center; gap:15px">
-                <h2 style="margin:0; letter-spacing: 1px;">KNOWLEDGE BASE <span style="font-weight:100">| NOC</span></h2>
-            </div>
+            <h2 style="margin:0">KNOWLEDGE BASE <span style="font-weight:100">| NOC</span></h2>
             <div style="display:flex; gap:25px; align-items:center;">
-                <div class="stats" id="total-count">Carregando...</div>
-                <div onclick="toggleDarkMode()" style="cursor:pointer; font-size: 14px;">🌙 Modo Noturno</div>
+                <div id="total-count" style="font-size:12px; opacity:0.8"></div>
+                <div onclick="toggleDarkMode()" style="cursor:pointer">🌙 Modo Noturno</div>
                 <button onclick="logout()" style="background:transparent; border:1px solid white; color:white; padding:6px 15px; border-radius:6px; cursor:pointer;">Sair</button>
             </div>
         </header>
@@ -112,40 +112,52 @@
                 <label>Menu de Destino:</label>
                 <select id="vert">
                     <option value="Operação DVA">Operação DVA</option>
+                    <option value="Matriz de Acessos">📑 Matriz de Acessos</option>
                     <option value="Parceiros">Parceiros</option>
                     <option value="Lojas">Lojas</option>
                     <option value="Contatos Úteis">Contatos Úteis</option>
                 </select>
 
                 <label>Título do Procedimento:</label>
-                <input type="text" id="tit" placeholder="Ex: Reinicialização de Servidor X">
+                <input type="text" id="tit" placeholder="Ex: Reinicialização Servidor">
 
-                <label>Tipo de Conteúdo:</label>
-                <select id="typ">
+                <label>Tipo de Registro:</label>
+                <select id="typ" onchange="toggleUploadUI()">
                     <option value="Texto">Texto / Passo a Passo</option>
+                    <option value="Matriz">Matriz (Tabela)</option>
+                    <option value="Arquivo">Arquivo / PDF (Upload)</option>
                     <option value="Link">Link Externo</option>
-                    <option value="PDF">Caminho PDF (Rede)</option>
                 </select>
 
-                <label>Conteúdo Detalhado:</label>
-                <textarea id="cont" rows="10" placeholder="Descreva o procedimento aqui..."></textarea>
+                <div id="upload-section" style="display:none">
+                    <label>Anexar Documento:</label>
+                    <div class="upload-container">
+                        <span id="upload-status">📁 Clique para selecionar arquivo</span>
+                        <input type="file" id="file-input" onchange="handleFileUpload()">
+                        <div class="upload-progress" id="upload-progress"></div>
+                    </div>
+                </div>
+
+                <label>Conteúdo / URL:</label>
+                <textarea id="cont" rows="8" placeholder="Escreva aqui ou aguarde o upload preencher o link automaticamente..."></textarea>
 
                 <button onclick="saveData()" class="btn-save" id="btn-save">SALVAR NA NUVEM</button>
                 <button onclick="cancelEdit()" class="btn-cancel" id="btn-cancel">Cancelar Edição</button>
             </aside>
 
             <main>
-                <input type="text" id="search" placeholder="🔍 Pesquisar por título, conteúdo ou tags..." oninput="render()">
+                <input type="text" id="search" placeholder="🔍 Pesquisar por título, conteúdo ou tag..." oninput="handleSearch()">
                 
                 <div class="filter-bar">
                     <button class="filter-btn active" onclick="filterBy('Todos', this)">Todos</button>
+                    <button class="filter-btn" onclick="filterBy('Matriz de Acessos', this)">📑 Matriz</button>
                     <button class="filter-btn" onclick="filterBy('Operação DVA', this)">DVA</button>
                     <button class="filter-btn" onclick="filterBy('Parceiros', this)">Parceiros</button>
                     <button class="filter-btn" onclick="filterBy('Lojas', this)">Lojas</button>
                     <button class="filter-btn" onclick="filterBy('Contatos Úteis', this)">📞 Contatos</button>
                 </div>
 
-                <div class="kb-grid" id="grid">Buscando informações...</div>
+                <div class="kb-grid" id="grid">Conectando...</div>
             </main>
         </div>
     </div>
@@ -153,17 +165,14 @@
     <div id="modal" class="modal">
         <div class="modal-content">
             <span class="close-modal" onclick="closeM()">&times;</span>
-            <div id="m-header">
-                <span id="m-tag" class="menu-tag"></span>
-                <h2 id="m-title" style="color:var(--carrefour-blue); margin: 15px 0;"></h2>
-            </div>
+            <span id="m-tag" class="menu-tag"></span>
+            <h2 id="m-title" style="color:var(--carrefour-blue); margin: 15px 0;"></h2>
             <hr style="opacity:0.1; margin: 20px 0;">
-            <div id="modal-body" class="content-view"></div>
+            <div id="modal-body"></div>
         </div>
     </div>
 
     <script>
-        // --- CONFIGURAÇÃO SUPABASE ---
         const SUPABASE_URL = 'https://mttpkrnkhqzvnphqsrbn.supabase.co';
         const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im10dHBrcm5raHF6dm5waHFzcmJuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg1ODcxOTYsImV4cCI6MjA5NDE2MzE5Nn0.7g_10vmDK2cHsPJyN64CNiIxVZxJIBKIXBTKmGYY-Ig';
         const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
@@ -171,12 +180,10 @@
         let db = [];
         let currentFilter = 'Todos';
         let favorites = JSON.parse(localStorage.getItem('noc_favs') || '[]');
+        let searchTimeout;
 
-        // --- AUTENTICAÇÃO ---
         function checkLogin() {
-            const u = document.getElementById('u').value;
-            const p = document.getElementById('p').value;
-            if (u === 'NOC' && p === 'evolve') {
+            if (document.getElementById('u').value === 'NOC' && document.getElementById('p').value === 'evolve') {
                 sessionStorage.setItem('auth', 'true');
                 location.reload();
             } else { alert('Acesso negado.'); }
@@ -188,16 +195,45 @@
             carregarDados();
         }
 
-        // --- LÓGICA DE DADOS ---
+        function handleSearch() {
+            clearTimeout(searchTimeout);
+            searchTimeout = setTimeout(render, 300);
+        }
+
         async function carregarDados() {
-            try {
-                const { data, error } = await supabaseClient.from('registros').select('*').order('created_at', { ascending: false });
-                if (error) throw error;
-                db = data || [];
-                render();
-            } catch (err) {
-                document.getElementById('grid').innerHTML = `<p style="color:red">Erro de sincronização: ${err.message}</p>`;
+            const { data, error } = await supabaseClient.from('registros').select('*').order('created_at', { ascending: false });
+            if (!error) { db = data; render(); }
+        }
+
+        // --- UPLOAD ---
+        function toggleUploadUI() {
+            const type = document.getElementById('typ').value;
+            document.getElementById('upload-section').style.display = (type === 'Arquivo') ? 'block' : 'none';
+        }
+
+        async function handleFileUpload() {
+            const file = document.getElementById('file-input').files[0];
+            const status = document.getElementById('upload-status');
+            const progress = document.getElementById('upload-progress');
+            
+            if (!file) return;
+
+            status.innerText = '🚀 Subindo para a nuvem...';
+            progress.style.width = '30%';
+
+            const fileName = `${Date.now()}_${file.name}`;
+            const { data, error } = await supabaseClient.storage.from('arquivos').upload(fileName, file);
+
+            if (error) {
+                alert('Erro: Verifique se o Bucket "arquivos" é público.');
+                status.innerText = '❌ Erro no envio';
+                return;
             }
+
+            const { data: pData } = supabaseClient.storage.from('arquivos').getPublicUrl(fileName);
+            document.getElementById('cont').value = pData.publicUrl;
+            status.innerText = '✅ Arquivo Conectado!';
+            progress.style.width = '100%';
         }
 
         async function saveData() {
@@ -210,49 +246,29 @@
                 content: document.getElementById('cont').value
             };
 
-            if (!payload.title || !payload.content) return alert('Preencha título e conteúdo.');
+            if (!payload.title || !payload.content) return alert('Preencha Título e Conteúdo.');
 
-            btn.disabled = true;
-            btn.innerText = 'PROCESSANDO...';
+            btn.disabled = true; btn.innerText = 'SALVANDO...';
 
-            let result;
-            if (id) {
-                // MODO EDIÇÃO
-                result = await supabaseClient.from('registros').update(payload).eq('id', id);
-            } else {
-                // MODO CRIAÇÃO
-                result = await supabaseClient.from('registros').insert([payload]);
-            }
+            if (id) await supabaseClient.from('registros').update(payload).eq('id', id);
+            else await supabaseClient.from('registros').insert([payload]);
 
-            if (result.error) {
-                alert('Erro: ' + result.error.message);
-            } else {
-                cancelEdit();
-                carregarDados();
-            }
-            btn.disabled = false;
+            cancelEdit(); carregarDados();
+            btn.disabled = false; btn.innerText = 'SALVAR NA NUVEM';
         }
 
-        // --- UI E RENDERIZAÇÃO ---
         function render() {
-            const term = document.getElementById('search').value.toLowerCase();
+            const term = document.getElementById('search').value.toLowerCase().trim();
             const grid = document.getElementById('grid');
             grid.innerHTML = '';
 
-            // Filtragem
             let filtrados = db.filter(i => {
                 const searchStr = (i.title + i.content + i.menu).toLowerCase();
                 return searchStr.includes(term) && (currentFilter === 'Todos' || i.menu === currentFilter);
             });
 
-            // Ordenação: Favoritos primeiro
-            filtrados.sort((a, b) => {
-                const aFav = favorites.includes(a.id) ? 1 : 0;
-                const bFav = favorites.includes(b.id) ? 1 : 0;
-                return bFav - aFav;
-            });
-
-            document.getElementById('total-count').innerText = `${filtrados.length} procedimentos listados`;
+            filtrados.sort((a,b) => (favorites.includes(b.id) - favorites.includes(a.id)));
+            document.getElementById('total-count').innerText = `${filtrados.length} registros ativos`;
 
             filtrados.forEach(i => {
                 const isFav = favorites.includes(i.id);
@@ -260,23 +276,62 @@
                     <div class="kb-card" onclick="openM(${i.id})">
                         <div>
                             <span class="menu-tag">${i.menu}</span>
+                            <span style="float:right">${i.type === 'Arquivo' ? '📎' : ''}</span>
                             <h3>${i.title}</h3>
                         </div>
                         <div class="card-actions">
+                            <button class="btn-icon ${isFav ? 'fav-active' : ''}" onclick="event.stopPropagation(); toggleFav(${i.id})">★</button>
                             <div>
-                                <button class="btn-icon ${isFav ? 'fav-active' : ''}" onclick="event.stopPropagation(); toggleFav(${i.id})">★</button>
-                                <span style="font-size:10px; opacity:0.4; margin-left:10px;">${new Date(i.created_at).toLocaleDateString()}</span>
-                            </div>
-                            <div>
-                                <button class="btn-icon" title="Editar" onclick="event.stopPropagation(); startEdit(${i.id})">📝</button>
-                                <button class="btn-icon" title="Excluir" onclick="event.stopPropagation(); del(${i.id})" style="color:var(--carrefour-red)">🗑️</button>
+                                <button class="btn-icon" onclick="event.stopPropagation(); startEdit(${i.id})">📝</button>
+                                <button class="btn-icon" onclick="event.stopPropagation(); del(${i.id})" style="color:var(--carrefour-red)">🗑️</button>
                             </div>
                         </div>
                     </div>`;
             });
         }
 
-        // --- FUNÇÕES DE APOIO ---
+        function openM(id) {
+            const item = db.find(i => i.id === id);
+            const term = document.getElementById('search').value.trim();
+            document.getElementById('m-title').innerText = item.title;
+            document.getElementById('m-tag').innerText = item.menu;
+            
+            let bodyHTML = '';
+            if (item.type === 'Matriz') {
+                const linhas = item.content.split('\n');
+                bodyHTML = `<table class="matriz-table"><tr><th>Sistema</th><th>Responsável</th><th>Ação</th></tr>`;
+                linhas.forEach(l => {
+                    const col = l.split('|');
+                    if (col.length >= 2) {
+                        bodyHTML += `<tr><td><strong>${col[0]}</strong></td><td>${col[1]||''}</td><td>${col[2] ? `<a href="${col[2].trim()}" target="_blank">Abrir</a>` : '-'}</td></tr>`;
+                    }
+                });
+                bodyHTML += `</table>`;
+            } else if (item.type === 'Arquivo') {
+                bodyHTML = `<div style="text-align:center; padding:30px;">
+                    <p>Documento oficial anexado para este procedimento.</p>
+                    <a href="${item.content}" target="_blank" class="btn-open-file">📄 VISUALIZAR DOCUMENTO COMPLETO</a>
+                </div>`;
+            } else {
+                let text = item.content.replace(/(https?:\/\/[^\s]+)/g, '<a href="$1" target="_blank">$1</a>');
+                if (term.length > 2) {
+                    const reg = new RegExp(`(${term})`, 'gi');
+                    text = text.replace(reg, '<mark>$1</mark>');
+                }
+                bodyHTML = `<div style="white-space: pre-wrap; line-height:1.8;">${text}</div>`;
+            }
+            
+            document.getElementById('modal-body').innerHTML = bodyHTML;
+            document.getElementById('modal').style.display = 'flex';
+        }
+
+        function toggleFav(id) {
+            if (favorites.includes(id)) favorites = favorites.filter(f => f !== id);
+            else favorites.push(id);
+            localStorage.setItem('noc_favs', JSON.stringify(favorites));
+            render();
+        }
+
         function startEdit(id) {
             const item = db.find(i => i.id === id);
             document.getElementById('edit-id').value = item.id;
@@ -284,12 +339,12 @@
             document.getElementById('tit').value = item.title;
             document.getElementById('typ').value = item.type;
             document.getElementById('cont').value = item.content;
-            
+            toggleUploadUI();
             document.getElementById('form-title').innerText = 'Editando Registro';
-            document.getElementById('btn-save').innerText = 'ATUALIZAR NA NUVEM';
+            document.getElementById('btn-save').innerText = 'ATUALIZAR REGISTRO';
             document.getElementById('btn-save').classList.add('btn-edit-mode');
             document.getElementById('btn-cancel').style.display = 'block';
-            window.scrollTo({top: 0, behavior: 'smooth'});
+            window.scrollTo(0,0);
         }
 
         function cancelEdit() {
@@ -302,33 +357,11 @@
             document.getElementById('btn-cancel').style.display = 'none';
         }
 
-        function toggleFav(id) {
-            if (favorites.includes(id)) {
-                favorites = favorites.filter(f => f !== id);
-            } else {
-                favorites.push(id);
-            }
-            localStorage.setItem('noc_favs', JSON.stringify(favorites));
-            render();
-        }
-
         async function del(id) {
-            if (confirm('Tem certeza? Esta ação removerá o item da nuvem para todos.')) {
-                const { error } = await supabaseClient.from('registros').delete().eq('id', id);
-                if (!error) carregarDados();
+            if (confirm('Excluir este procedimento da nuvem?')) {
+                await supabaseClient.from('registros').delete().eq('id', id);
+                carregarDados();
             }
-        }
-
-        function openM(id) {
-            const item = db.find(i => i.id === id);
-            document.getElementById('m-title').innerText = item.title;
-            document.getElementById('m-tag').innerText = item.menu;
-            
-            // Linkify: transforma URLs em links clicáveis
-            const contentWithLinks = item.content.replace(/(https?:\/\/[^\s]+)/g, '<a href="$1" target="_blank">$1</a>');
-            document.getElementById('modal-body').innerHTML = contentWithLinks;
-            
-            document.getElementById('modal').style.display = 'flex';
         }
 
         function closeM() { document.getElementById('modal').style.display = 'none'; }
