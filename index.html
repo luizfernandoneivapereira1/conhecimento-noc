@@ -232,12 +232,20 @@
             if (!file) return;
 
             status.innerText = "⏳ Subindo arquivo para o Storage...";
-            const fileName = `${Date.now()}_${file.name}`;
+            
+            // 1. Limpa o nome do arquivo (Tira acentos, cedilha e troca espaços por _)
+            const safeName = file.name
+                .normalize("NFD").replace(/[\u0300-\u036f]/g, "") // Remove acentos
+                .replace(/[^a-zA-Z0-9.-]/g, "_");                 // Troca espaços/caracteres estranhos por _
+
+            // 2. Cria o nome final seguro
+            const fileName = `${Date.now()}_${safeName}`;
             
             const { error } = await supabaseClient.storage.from('arquivos').upload(fileName, file);
             
             if (error) {
-                alert("Erro no upload! Verifique se a política do Storage está liberada para usuários 'authenticated'.");
+                console.error("Erro do Supabase:", error);
+                alert("Erro no upload! Verifique o console.");
                 status.innerText = "❌ Falha no envio";
                 return;
             }
