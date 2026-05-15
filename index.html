@@ -3,171 +3,107 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>NOC Knowledge Base - Pro Cloud V3</title>
+    <title>NOC Knowledge Base - Pro Cloud V4</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         :root {
             --carrefour-blue: #005bbb;
             --carrefour-dark-blue: #00387b;
-            --carrefour-red: #ed1c24;
             --bg-light: #f4f7f9;
             --card-light: #ffffff;
             --text-light: #333;
             --border-light: #dee2e6;
         }
-
         body.dark-mode {
-            --bg-light: #121212;
-            --card-light: #1e1e1e;
-            --text-light: #e0e0e0;
-            --border-light: #333;
+            --bg-light: #121212; --card-light: #1e1e1e; --text-light: #e0e0e0; --border-light: #333;
         }
-
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: var(--bg-light); margin: 0; color: var(--text-light); transition: 0.3s; }
-        
-        /* HEADER */
-        header { background: var(--carrefour-dark-blue); color: white; padding: 12px 40px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 10px rgba(0,0,0,0.2); }
+        body { font-family: 'Segoe UI', sans-serif; background-color: var(--bg-light); margin: 0; color: var(--text-light); transition: 0.3s; }
+        header { background: var(--carrefour-dark-blue); color: white; padding: 12px 40px; display: flex; justify-content: space-between; align-items: center; }
         
         /* LOGIN */
         #login-screen { display: flex; justify-content: center; align-items: center; height: 100vh; background: var(--carrefour-dark-blue); position: fixed; width: 100%; z-index: 9999; }
-        .login-box { background: white; padding: 40px; border-radius: 12px; width: 320px; text-align: center; color: #333; box-shadow: 0 10px 25px rgba(0,0,0,0.5); }
+        .login-box { background: white; padding: 40px; border-radius: 12px; width: 320px; text-align: center; color: #333; }
         
         #app-screen { display: none; }
         .container { max-width: 1400px; margin: 20px auto; padding: 0 20px; display: grid; grid-template-columns: 350px 1fr; gap: 25px; }
+        .container.full { grid-template-columns: 1fr; }
 
         /* SIDEBAR */
         .sidebar { background: var(--card-light); padding: 25px; border-radius: 12px; border: 1px solid var(--border-light); height: fit-content; position: sticky; top: 20px; }
-        input, select, textarea { width: 100%; padding: 12px; margin-bottom: 12px; border: 1px solid var(--border-light); border-radius: 8px; background: var(--card-light); color: var(--text-light); box-sizing: border-box; }
+        input, select, textarea { width: 100%; padding: 12px; margin-bottom: 12px; border: 1px solid var(--border-light); border-radius: 8px; background: var(--card-light); color: var(--text-light); }
         
-        .btn-save { background: var(--carrefour-blue); color: white; border: none; padding: 15px; border-radius: 8px; cursor: pointer; font-weight: bold; width: 100%; transition: 0.2s; }
-        .btn-save:hover { background: var(--carrefour-dark-blue); }
-        .btn-edit-mode { background: #ff9800 !important; }
-        .btn-cancel { background: #666; color: white; border: none; padding: 8px; border-radius: 8px; cursor: pointer; width: 100%; margin-top: 5px; display: none; }
-
-        /* UPLOAD BOX */
-        .upload-container { border: 2px dashed var(--carrefour-blue); padding: 15px; border-radius: 8px; text-align: center; margin-bottom: 15px; cursor: pointer; position: relative; background: rgba(0,91,187,0.03); }
+        .btn-save { background: var(--carrefour-blue); color: white; border: none; padding: 15px; border-radius: 8px; cursor: pointer; font-weight: bold; width: 100%; }
+        .upload-container { border: 2px dashed var(--carrefour-blue); padding: 10px; border-radius: 8px; text-align: center; margin-bottom: 15px; position: relative; background: rgba(0,91,187,0.03); }
         .upload-container input[type="file"] { position: absolute; width: 100%; height: 100%; top: 0; left: 0; opacity: 0; cursor: pointer; }
-        .upload-progress { height: 6px; background: #28a745; width: 0%; border-radius: 3px; transition: 0.4s; margin-top: 10px; }
+        .upload-progress { height: 6px; background: #28a745; width: 0%; border-radius: 3px; transition: 0.4s; }
 
-        /* GRID & CARDS */
-        .filter-bar { display: flex; gap: 10px; margin-bottom: 20px; border-bottom: 2px solid var(--border-light); padding-bottom: 15px; overflow-x: auto; }
-        .filter-btn { padding: 10px 20px; border-radius: 25px; border: 1px solid var(--carrefour-blue); background: transparent; color: var(--carrefour-blue); cursor: pointer; font-weight: bold; white-space: nowrap; transition: 0.2s; }
-        .filter-btn.active { background: var(--carrefour-blue); color: white; }
-        
-        #search { padding: 18px; font-size: 16px; border: 2px solid var(--carrefour-blue); border-radius: 12px; width: 100%; margin-bottom: 25px; background: var(--card-light); color: var(--text-light); box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
-
+        /* CARDS */
         .kb-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px; }
-        .kb-card { background: var(--card-light); padding: 20px; border-radius: 12px; border: 1px solid var(--border-light); cursor: pointer; transition: 0.3s; display: flex; flex-direction: column; justify-content: space-between; }
-        .kb-card:hover { transform: translateY(-5px); box-shadow: 0 10px 20px rgba(0,0,0,0.1); border-color: var(--carrefour-blue); }
-        
-        .menu-tag { font-size: 10px; background: #e9ecef; padding: 4px 8px; border-radius: 5px; color: #495057; font-weight: bold; text-transform: uppercase; }
-        body.dark-mode .menu-tag { background: #333; color: #ccc; }
-
+        .kb-card { background: var(--card-light); padding: 20px; border-radius: 12px; border: 1px solid var(--border-light); cursor: pointer; transition: 0.3s; }
+        .kb-card:hover { transform: translateY(-5px); border-color: var(--carrefour-blue); }
+        .menu-tag { font-size: 10px; background: #e9ecef; padding: 4px 8px; border-radius: 5px; font-weight: bold; }
         .card-actions { display: flex; justify-content: space-between; align-items: center; margin-top: 15px; border-top: 1px solid #eee; padding-top: 10px; }
-        .btn-icon { background: none; border: none; cursor: pointer; font-size: 16px; opacity: 0.6; transition: 0.2s; }
-        .fav-active { color: #ffc107; opacity: 1; }
-
-        /* MODAL */
-        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 10000; justify-content: center; align-items: center; backdrop-filter: blur(5px); }
-        .modal-content { background: var(--card-light); width: 95%; max-width: 1000px; max-height: 85vh; padding: 40px; border-radius: 15px; position: relative; overflow-y: auto; box-shadow: 0 20px 50px rgba(0,0,0,0.3); }
-        .close-modal { position: absolute; top: 20px; right: 25px; font-size: 35px; cursor: pointer; color: #999; }
         
-        /* MATRIZ TABLE */
-        .matriz-table { width: 100%; border-collapse: collapse; margin-top: 15px; }
-        .matriz-table th { background: var(--carrefour-blue); color: white; padding: 12px; text-align: left; }
-        .matriz-table td { padding: 12px; border-bottom: 1px solid var(--border-light); }
-
-        .btn-open-file { display: inline-block; background: var(--carrefour-blue); color: white; padding: 15px 30px; border-radius: 8px; text-decoration: none; font-weight: bold; margin-top: 20px; transition: 0.3s; }
-        .btn-open-file:hover { background: var(--carrefour-dark-blue); transform: scale(1.05); }
+        /* MODAL */
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 10000; justify-content: center; align-items: center; }
+        .modal-content { background: var(--card-light); width: 90%; max-width: 900px; padding: 40px; border-radius: 15px; position: relative; max-height: 80vh; overflow-y: auto; }
     </style>
 </head>
 <body>
 
     <div id="login-screen">
         <div class="login-box">
-            <img src="https://www.carrefour.com.br/favicon.ico" width="40" style="margin-bottom:10px">
             <h2>NOC Knowledge Base</h2>
-            <p style="font-size:12px; color:#666">Cloud Management v3.0</p>
-            <input type="text" id="u" placeholder="Usuário">
+            <input type="text" id="u" placeholder="Usuário (Admin)">
             <input type="password" id="p" placeholder="Senha">
-            <button onclick="checkLogin()" class="btn-save">ENTRAR NO SISTEMA</button>
+            <button onclick="checkLogin()" class="btn-save">ENTRAR</button>
+            <p style="font-size: 11px; margin-top: 15px; color: #666;">Admin: NOC / evolve | Leitor: senha leitura123</p>
         </div>
     </div>
 
     <div id="app-screen">
         <header>
-            <h2 style="margin:0">KNOWLEDGE BASE <span style="font-weight:100">| NOC</span></h2>
-            <div style="display:flex; gap:25px; align-items:center;">
-                <div id="total-count" style="font-size:12px; opacity:0.8"></div>
-                <div onclick="toggleDarkMode()" style="cursor:pointer">🌙 Modo Noturno</div>
-                <button onclick="logout()" style="background:transparent; border:1px solid white; color:white; padding:6px 15px; border-radius:6px; cursor:pointer;">Sair</button>
+            <h2>KNOWLEDGE BASE | NOC</h2>
+            <div>
+                <button onclick="logout()" style="color:white; background:transparent; border:1px solid white; padding:5px 10px; cursor:pointer;">Sair</button>
             </div>
         </header>
 
-        <div class="container">
-            <aside class="sidebar">
-                <h3 id="form-title">Novo Registro</h3>
+        <div class="container" id="main-container">
+            <aside class="sidebar" id="sidebar-admin">
+                <h3>Novo Registro</h3>
                 <input type="hidden" id="edit-id">
-                
-                <label>Menu de Destino:</label>
                 <select id="vert">
                     <option value="Operação DVA">Operação DVA</option>
-                    <option value="Matriz de Acessos">📑 Matriz de Acessos</option>
-                    <option value="Parceiros">Parceiros</option>
+                    <option value="Matriz de Acessos">Matriz de Acessos</option>
                     <option value="Lojas">Lojas</option>
-                    <option value="Contatos Úteis">Contatos Úteis</option>
                 </select>
-
-                <label>Título do Procedimento:</label>
-                <input type="text" id="tit" placeholder="Ex: Reinicialização Servidor">
-
-                <label>Tipo de Registro:</label>
+                <input type="text" id="tit" placeholder="Título">
                 <select id="typ" onchange="toggleUploadUI()">
-                    <option value="Texto">Texto / Passo a Passo</option>
-                    <option value="Matriz">Matriz (Tabela)</option>
-                    <option value="Arquivo">Arquivo / PDF (Upload)</option>
-                    <option value="Link">Link Externo</option>
+                    <option value="Texto">Texto</option>
+                    <option value="Arquivo">Arquivo (Upload)</option>
                 </select>
-
                 <div id="upload-section" style="display:none">
-                    <label>Anexar Documento:</label>
                     <div class="upload-container">
-                        <span id="upload-status">📁 Clique para selecionar arquivo</span>
+                        <span id="upload-status">📁 Anexar PDF</span>
                         <input type="file" id="file-input" onchange="handleFileUpload()">
                         <div class="upload-progress" id="upload-progress"></div>
                     </div>
                 </div>
-
-                <label>Conteúdo / URL:</label>
-                <textarea id="cont" rows="8" placeholder="Escreva aqui ou aguarde o upload preencher o link automaticamente..."></textarea>
-
-                <button onclick="saveData()" class="btn-save" id="btn-save">SALVAR NA NUVEM</button>
-                <button onclick="cancelEdit()" class="btn-cancel" id="btn-cancel">Cancelar Edição</button>
+                <textarea id="cont" rows="5" placeholder="Conteúdo"></textarea>
+                <button onclick="saveData()" class="btn-save" id="btn-save">SALVAR</button>
             </aside>
 
             <main>
-                <input type="text" id="search" placeholder="🔍 Pesquisar por título, conteúdo ou tag..." oninput="handleSearch()">
-                
-                <div class="filter-bar">
-                    <button class="filter-btn active" onclick="filterBy('Todos', this)">Todos</button>
-                    <button class="filter-btn" onclick="filterBy('Matriz de Acessos', this)">📑 Matriz</button>
-                    <button class="filter-btn" onclick="filterBy('Operação DVA', this)">DVA</button>
-                    <button class="filter-btn" onclick="filterBy('Parceiros', this)">Parceiros</button>
-                    <button class="filter-btn" onclick="filterBy('Lojas', this)">Lojas</button>
-                    <button class="filter-btn" onclick="filterBy('Contatos Úteis', this)">📞 Contatos</button>
-                </div>
-
-                <div class="kb-grid" id="grid">Conectando...</div>
+                <input type="text" id="search" placeholder="🔍 Buscar..." oninput="handleSearch()" style="width:100%; padding:15px; margin-bottom:20px; border-radius:10px; border:2px solid var(--carrefour-blue);">
+                <div class="kb-grid" id="grid"></div>
             </main>
         </div>
     </div>
 
-    <div id="modal" class="modal">
-        <div class="modal-content">
-            <span class="close-modal" onclick="closeM()">&times;</span>
-            <span id="m-tag" class="menu-tag"></span>
-            <h2 id="m-title" style="color:var(--carrefour-blue); margin: 15px 0;"></h2>
-            <hr style="opacity:0.1; margin: 20px 0;">
+    <div id="modal" class="modal" onclick="closeM()">
+        <div class="modal-content" onclick="event.stopPropagation()">
+            <h2 id="m-title"></h2>
             <div id="modal-body"></div>
         </div>
     </div>
@@ -178,202 +114,82 @@
         const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
         let db = [];
-        let currentFilter = 'Todos';
-        let favorites = JSON.parse(localStorage.getItem('noc_favs') || '[]');
-        let searchTimeout;
+        let role = sessionStorage.getItem('auth');
 
         function checkLogin() {
-            if (document.getElementById('u').value === 'NOC' && document.getElementById('p').value === 'evolve') {
-                sessionStorage.setItem('auth', 'true');
-                location.reload();
-            } else { alert('Acesso negado.'); }
+            const u = document.getElementById('u').value.toUpperCase();
+            const p = document.getElementById('p').value;
+            if (u === 'NOC' && p === 'evolve') sessionStorage.setItem('auth', 'admin');
+            else if (p === 'leitura123') sessionStorage.setItem('auth', 'reader');
+            else return alert('Acesso negado');
+            location.reload();
         }
 
-        if (sessionStorage.getItem('auth')) {
+        if (role) {
             document.getElementById('login-screen').style.display = 'none';
             document.getElementById('app-screen').style.display = 'block';
+            if (role === 'reader') {
+                document.getElementById('sidebar-admin').style.display = 'none';
+                document.getElementById('main-container').classList.add('full');
+            }
             carregarDados();
         }
 
-        function handleSearch() {
-            clearTimeout(searchTimeout);
-            searchTimeout = setTimeout(render, 300);
-        }
-
         async function carregarDados() {
-            const { data, error } = await supabaseClient.from('registros').select('*').order('created_at', { ascending: false });
-            if (!error) { db = data; render(); }
+            const { data } = await supabaseClient.from('registros').select('*').order('created_at', { ascending: false });
+            db = data; render();
         }
 
-        // --- UPLOAD ---
         function toggleUploadUI() {
-            const type = document.getElementById('typ').value;
-            document.getElementById('upload-section').style.display = (type === 'Arquivo') ? 'block' : 'none';
+            document.getElementById('upload-section').style.display = (document.getElementById('typ').value === 'Arquivo') ? 'block' : 'none';
         }
 
         async function handleFileUpload() {
             const file = document.getElementById('file-input').files[0];
-            const status = document.getElementById('upload-status');
-            const progress = document.getElementById('upload-progress');
-            
+            const prog = document.getElementById('upload-progress');
             if (!file) return;
-
-            status.innerText = '🚀 Subindo para a nuvem...';
-            progress.style.width = '30%';
-
-            const fileName = `${Date.now()}_${file.name}`;
-            const { data, error } = await supabaseClient.storage.from('arquivos').upload(fileName, file);
-
-            if (error) {
-                alert('Erro: Verifique se o Bucket "arquivos" é público.');
-                status.innerText = '❌ Erro no envio';
-                return;
-            }
-
-            const { data: pData } = supabaseClient.storage.from('arquivos').getPublicUrl(fileName);
-            document.getElementById('cont').value = pData.publicUrl;
-            status.innerText = '✅ Arquivo Conectado!';
-            progress.style.width = '100%';
+            prog.style.width = '50%';
+            const name = `${Date.now()}_${file.name}`;
+            const { error } = await supabaseClient.storage.from('arquivos').upload(name, file);
+            if (error) return alert('Erro no bucket: verifique as políticas de storage.');
+            const { data } = supabaseClient.storage.from('arquivos').getPublicUrl(name);
+            document.getElementById('cont').value = data.publicUrl;
+            prog.style.width = '100%';
+            document.getElementById('upload-status').innerText = '✅ Pronto';
         }
 
         async function saveData() {
+            const payload = { menu: document.getElementById('vert').value, title: document.getElementById('tit').value, type: document.getElementById('typ').value, content: document.getElementById('cont').value };
             const id = document.getElementById('edit-id').value;
-            const btn = document.getElementById('btn-save');
-            const payload = {
-                menu: document.getElementById('vert').value,
-                title: document.getElementById('tit').value,
-                type: document.getElementById('typ').value,
-                content: document.getElementById('cont').value
-            };
-
-            if (!payload.title || !payload.content) return alert('Preencha Título e Conteúdo.');
-
-            btn.disabled = true; btn.innerText = 'SALVANDO...';
-
             if (id) await supabaseClient.from('registros').update(payload).eq('id', id);
             else await supabaseClient.from('registros').insert([payload]);
-
-            cancelEdit(); carregarDados();
-            btn.disabled = false; btn.innerText = 'SALVAR NA NUVEM';
+            location.reload();
         }
 
         function render() {
-            const term = document.getElementById('search').value.toLowerCase().trim();
+            const term = document.getElementById('search').value.toLowerCase();
             const grid = document.getElementById('grid');
             grid.innerHTML = '';
-
-            let filtrados = db.filter(i => {
-                const searchStr = (i.title + i.content + i.menu).toLowerCase();
-                return searchStr.includes(term) && (currentFilter === 'Todos' || i.menu === currentFilter);
-            });
-
-            filtrados.sort((a,b) => (favorites.includes(b.id) - favorites.includes(a.id)));
-            document.getElementById('total-count').innerText = `${filtrados.length} registros ativos`;
-
-            filtrados.forEach(i => {
-                const isFav = favorites.includes(i.id);
+            db.filter(i => i.title.toLowerCase().includes(term)).forEach(i => {
                 grid.innerHTML += `
                     <div class="kb-card" onclick="openM(${i.id})">
-                        <div>
-                            <span class="menu-tag">${i.menu}</span>
-                            <span style="float:right">${i.type === 'Arquivo' ? '📎' : ''}</span>
-                            <h3>${i.title}</h3>
-                        </div>
-                        <div class="card-actions">
-                            <button class="btn-icon ${isFav ? 'fav-active' : ''}" onclick="event.stopPropagation(); toggleFav(${i.id})">★</button>
-                            <div>
-                                <button class="btn-icon" onclick="event.stopPropagation(); startEdit(${i.id})">📝</button>
-                                <button class="btn-icon" onclick="event.stopPropagation(); del(${i.id})" style="color:var(--carrefour-red)">🗑️</button>
-                            </div>
-                        </div>
+                        <span class="menu-tag">${i.menu}</span>
+                        <h3>${i.title} ${i.type === 'Arquivo' ? '📎' : ''}</h3>
+                        ${role === 'admin' ? `<button onclick="event.stopPropagation(); deleteR(${i.id})">🗑️</button>` : ''}
                     </div>`;
             });
         }
 
+        async function deleteR(id) { if(confirm('Excluir?')) { await supabaseClient.from('registros').delete().eq('id', id); carregarDados(); } }
         function openM(id) {
-            const item = db.find(i => i.id === id);
-            const term = document.getElementById('search').value.trim();
-            document.getElementById('m-title').innerText = item.title;
-            document.getElementById('m-tag').innerText = item.menu;
-            
-            let bodyHTML = '';
-            if (item.type === 'Matriz') {
-                const linhas = item.content.split('\n');
-                bodyHTML = `<table class="matriz-table"><tr><th>Sistema</th><th>Responsável</th><th>Ação</th></tr>`;
-                linhas.forEach(l => {
-                    const col = l.split('|');
-                    if (col.length >= 2) {
-                        bodyHTML += `<tr><td><strong>${col[0]}</strong></td><td>${col[1]||''}</td><td>${col[2] ? `<a href="${col[2].trim()}" target="_blank">Abrir</a>` : '-'}</td></tr>`;
-                    }
-                });
-                bodyHTML += `</table>`;
-            } else if (item.type === 'Arquivo') {
-                bodyHTML = `<div style="text-align:center; padding:30px;">
-                    <p>Documento oficial anexado para este procedimento.</p>
-                    <a href="${item.content}" target="_blank" class="btn-open-file">📄 VISUALIZAR DOCUMENTO COMPLETO</a>
-                </div>`;
-            } else {
-                let text = item.content.replace(/(https?:\/\/[^\s]+)/g, '<a href="$1" target="_blank">$1</a>');
-                if (term.length > 2) {
-                    const reg = new RegExp(`(${term})`, 'gi');
-                    text = text.replace(reg, '<mark>$1</mark>');
-                }
-                bodyHTML = `<div style="white-space: pre-wrap; line-height:1.8;">${text}</div>`;
-            }
-            
-            document.getElementById('modal-body').innerHTML = bodyHTML;
+            const i = db.find(x => x.id === id);
+            document.getElementById('m-title').innerText = i.title;
+            document.getElementById('modal-body').innerHTML = i.type === 'Arquivo' ? `<a href="${i.content}" target="_blank" style="display:block; padding:20px; background:var(--carrefour-blue); color:white; text-align:center; text-decoration:none; border-radius:10px;">ABRIR DOCUMENTO PDF</a>` : `<div style="white-space:pre-wrap">${i.content}</div>`;
             document.getElementById('modal').style.display = 'flex';
         }
-
-        function toggleFav(id) {
-            if (favorites.includes(id)) favorites = favorites.filter(f => f !== id);
-            else favorites.push(id);
-            localStorage.setItem('noc_favs', JSON.stringify(favorites));
-            render();
-        }
-
-        function startEdit(id) {
-            const item = db.find(i => i.id === id);
-            document.getElementById('edit-id').value = item.id;
-            document.getElementById('vert').value = item.menu;
-            document.getElementById('tit').value = item.title;
-            document.getElementById('typ').value = item.type;
-            document.getElementById('cont').value = item.content;
-            toggleUploadUI();
-            document.getElementById('form-title').innerText = 'Editando Registro';
-            document.getElementById('btn-save').innerText = 'ATUALIZAR REGISTRO';
-            document.getElementById('btn-save').classList.add('btn-edit-mode');
-            document.getElementById('btn-cancel').style.display = 'block';
-            window.scrollTo(0,0);
-        }
-
-        function cancelEdit() {
-            document.getElementById('edit-id').value = '';
-            document.getElementById('tit').value = '';
-            document.getElementById('cont').value = '';
-            document.getElementById('form-title').innerText = 'Novo Registro';
-            document.getElementById('btn-save').innerText = 'SALVAR NA NUVEM';
-            document.getElementById('btn-save').classList.remove('btn-edit-mode');
-            document.getElementById('btn-cancel').style.display = 'none';
-        }
-
-        async function del(id) {
-            if (confirm('Excluir este procedimento da nuvem?')) {
-                await supabaseClient.from('registros').delete().eq('id', id);
-                carregarDados();
-            }
-        }
-
         function closeM() { document.getElementById('modal').style.display = 'none'; }
-        function filterBy(v, btn) {
-            currentFilter = v;
-            document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
-            btn.classList.add('active');
-            render();
-        }
         function logout() { sessionStorage.clear(); location.reload(); }
-        function toggleDarkMode() { document.body.classList.toggle('dark-mode'); }
-        window.onclick = (e) => { if (e.target == document.getElementById('modal')) closeM(); }
+        function handleSearch() { render(); }
     </script>
 </body>
 </html>
